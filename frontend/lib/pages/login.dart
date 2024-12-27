@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:frontend/pages/dashboard.dart';
+import 'package:frontend/pages/signup.dart';
 
 class Login extends StatefulWidget {
   const Login({super.key});
@@ -21,8 +22,8 @@ class LoginState extends State<Login> {
   void verifyUser() {
     print("Username:" + username);
     print("Password:" + password);
-    
-    Navigator.push(
+
+    Navigator.pushReplacement(
       context,
       MaterialPageRoute(builder: (context) => const Dashboard())
     );
@@ -88,6 +89,7 @@ class LoginState extends State<Login> {
                           style: TextStyle(
                             fontSize: 36,
                             fontWeight: FontWeight.w600,
+                            fontFamily: 'Playfair',
                             color: Colors.white,
                           ),
                         ),
@@ -139,7 +141,7 @@ class LoginState extends State<Login> {
                           },
                         ),
 
-                        SizedBox(height: 30),
+                        SizedBox(height: 20),
 
                         ElevatedButton(
                           onPressed: verifyUser, 
@@ -150,7 +152,7 @@ class LoginState extends State<Login> {
                             ),
                           ),
                           child: Container(
-                            padding: EdgeInsets.symmetric(vertical: 20, horizontal: 50),
+                            padding: EdgeInsets.symmetric(vertical: 15, horizontal: 50),
                             child: Text(
                               "Login",
                               style: TextStyle(
@@ -160,6 +162,26 @@ class LoginState extends State<Login> {
                               ),
                             ),
                           )
+                        ),
+
+                        SizedBox(height: 10),
+
+                        GestureDetector(
+                          onTap: () {
+                            Navigator.pushReplacement(
+                              context,
+                              MaterialPageRoute(builder: (context) => const Signup())
+                            );
+                          },
+
+                          child: Text(
+                            "Don't have an account? Register",
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.normal,
+                              color: Colors.white,
+                            )
+                          ),
                         )
                       ],
                     ),

@@ -62,6 +62,10 @@ flutter:
     - family: Courgette
       fonts:
         - asset: fonts/Courgette/Courgette-Regular.ttf
+      
+    - family: Playfair
+      fonts:
+        - asset: fonts/Playfair_Display/PlayfairDisplay-VariableFont_wght.ttf
 
   assets:
     - assets/
