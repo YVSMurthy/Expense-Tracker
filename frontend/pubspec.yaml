@@ -34,6 +34,7 @@ dependencies:
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
+  flutter_secure_storage: ^9.2.2
 
 dev_dependencies:
   flutter_test:
@@ -56,6 +57,14 @@ flutter:
   # included with your application, so that you can use the icons in
   # the material Icons class.
   uses-material-design: true
+
+  fonts:
+    - family: Courgette
+      fonts:
+        - asset: fonts/Courgette/Courgette-Regular.ttf
+
+  assets:
+    - assets/
 
   # To add assets to your application, add an assets section, like this:
   # assets:
