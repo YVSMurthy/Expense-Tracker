@@ -40,11 +40,6 @@ class SignupState extends State<Signup> {
   }
 
   void registerUser() {
-    print("Name: " + name);
-    print("Mobile No.: " + mobile);
-    print("Password: " + password);
-    print("Age: " + age.toString());
-    print("Gender: " + gender);
 
     setState(() {
       name = '';
@@ -104,7 +99,7 @@ class SignupState extends State<Signup> {
 
                   TextField(
                     decoration: InputDecoration(
-                      labelText: "Name",
+                      hintText: "Name",
                       filled: true,
                       fillColor: Colors.white,
                       contentPadding: EdgeInsets.all(20),
@@ -128,7 +123,7 @@ class SignupState extends State<Signup> {
 
                   TextField(
                     decoration: InputDecoration(
-                      labelText: "Mobile No.",
+                      hintText: "Mobile No.",
                       filled: true,
                       fillColor: Colors.white,
                       contentPadding: EdgeInsets.all(20),
@@ -152,7 +147,7 @@ class SignupState extends State<Signup> {
 
                   TextField(
                     decoration: InputDecoration(
-                      labelText: "Password",
+                      hintText: "Password",
                       filled: true,
                       fillColor: Colors.white,
                       contentPadding: EdgeInsets.all(20),
@@ -181,7 +176,7 @@ class SignupState extends State<Signup> {
                         width: w*0.4, 
                         child: TextField(
                           decoration: InputDecoration(
-                            labelText: "Age",
+                            hintText: "Age",
                             filled: true,
                             fillColor: Colors.white,
                             contentPadding: EdgeInsets.all(20),

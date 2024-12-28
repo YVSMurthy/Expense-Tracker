@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:frontend/pages/login.dart';
 import 'package:frontend/pages/dashboard.dart';
-import 'package:frontend/pages/signup.dart';
 
 void main() {
   runApp(const MyApp());
@@ -18,6 +17,7 @@ class MyApp extends StatefulWidget {
 class ExpenseTracker extends State<MyApp> {
   final storage = FlutterSecureStorage();
   String? token;
+  bool loading = true;  // Add loading state
 
   @override
   void initState() {
@@ -26,17 +26,28 @@ class ExpenseTracker extends State<MyApp> {
   }
 
   Future<void> _loadToken() async {
+    await Future.delayed(Duration(seconds: 2));
+
     final storedToken = await storage.read(key: 'auth_token');
 
     setState(() {
       token = storedToken;
+      loading = false;  // Stop loading when the token is checked
     });
   }
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      home: (token != null) ? Dashboard() : Signup(),
+      home: loading
+          ? Scaffold(
+              body: Center(
+                child: CircularProgressIndicator(),  // Show loader while loading
+              ),
+            )
+          : (token != null) 
+              ? Dashboard()  // Navigate to dashboard if token exists
+              : Login(),  // Navigate to login if no token
     );
   }
 }
