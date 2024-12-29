@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/pages/dashboard.dart';
 import 'package:frontend/pages/login.dart';
+import 'package:frontend/security/data_security.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class Signup extends StatefulWidget {
   const Signup({super.key});
@@ -14,15 +18,15 @@ class SignupState extends State<Signup> {
 
   List<DropdownMenuItem<String>> genders = <DropdownMenuItem<String>>[
     DropdownMenuItem<String>(
-      value: 'Male',
+      value: 'M',
       child: Text('Male'),
     ),
     DropdownMenuItem<String>(
-      value: 'Female',
+      value: 'F',
       child: Text('Female'),
     ),
     DropdownMenuItem<String>(
-      value: 'Other',
+      value: 'O',
       child: Text('Other'),
     ),
   ];
@@ -35,19 +39,42 @@ class SignupState extends State<Signup> {
       mobile = '';
       password = '';
       age = '';
-      gender = 'Male';
+      gender = 'M';
     });
   }
 
-  void registerUser() {
+  Future<void> registerUser() async {
+    final loginURI = Uri.parse('http://192.168.101.3:3001/register');
+    
+    try {
+      final ds = DataSecurity();
 
-    setState(() {
-      name = '';
-      mobile = '';
-      password = '';
-      age = '';
-      gender = 'Male';
-    });
+      final response = await http.post(loginURI,
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({'name': name, 'mobile': mobile, 'password': password, 'age': age, 'gender': gender})
+      );
+
+      final data = json.decode(response.body);
+
+      if (response.statusCode == 200) {;
+        final storage = FlutterSecureStorage();
+        await storage.write(key: 'name', value: ds.encrypt(name));
+        await storage.write(key: 'mobile', value: ds.encrypt(mobile));
+        await storage.write(key: 'password', value: ds.encrypt(password));
+
+        setState(() {
+          name = "";
+          mobile = "";
+          password = "";
+          age = "";
+          gender = "M";
+        });
+      } else {
+        print(data['message']);
+      }
+    } catch(error) {
+      print('Error: $error');
+    }
 
     Navigator.pushReplacement(
       context,

@@ -2,8 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:frontend/pages/login.dart';
 import 'package:frontend/pages/dashboard.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await dotenv.load(fileName: ".env");
   runApp(const MyApp());
 }
 
@@ -28,7 +31,7 @@ class ExpenseTracker extends State<MyApp> {
   Future<void> _loadToken() async {
     await Future.delayed(Duration(seconds: 2));
 
-    final storedToken = await storage.read(key: 'auth_token');
+    final storedToken = await storage.read(key: 'name');
 
     setState(() {
       token = storedToken;

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:frontend/pages/dashboard.dart';
 import 'package:frontend/pages/signup.dart';
+import 'package:frontend/security/data_security.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
@@ -13,12 +14,12 @@ class Login extends StatefulWidget {
 }
 
 class LoginState extends State<Login> {
-  String username = "", password = "";
-  final storage = FlutterSecureStorage();
+  String mobile = "", password = "";
 
   @override
   void initState() {
     super.initState();
+
   }
 
   // login user
@@ -26,23 +27,38 @@ class LoginState extends State<Login> {
     final loginURI = Uri.parse('http://192.168.101.3:3001/login');
     
     try {
+      final ds = DataSecurity();
+
       final response = await http.post(loginURI,
         headers: {'Content-Type': 'application/json'},
-        body: json.encode({'username': username, 'password': password})
+        body: json.encode({'mobile': mobile, 'password': password})
       );
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        print(data);
-        await storage.write(key: 'auth_token', value: data['authToken']);
+
+      final data = json.decode(response.body);
+
+      if (response.statusCode == 200) {;
+        final storage = FlutterSecureStorage();
+        await storage.write(key: 'name', value: ds.encrypt(data['name']));
+        await storage.write(key: 'mobile', value: ds.encrypt(mobile));
+        await storage.write(key: 'password', value: ds.encrypt(password));
+
+        setState(() {
+          mobile = "";
+          password = "";
+        });
+
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const Dashboard())
+        );
+      } else if (response.statusCode == 401) {
+        print("Unauthorized user");
+      } else {
+        print(data['message']);
       }
     } catch(error) {
       print('Error: $error');
     }
-
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (context) => const Dashboard())
-    );
   }
 
   @override
@@ -115,7 +131,7 @@ class LoginState extends State<Login> {
 
                       TextField(
                         decoration: InputDecoration(
-                          hintText: "Username",
+                          hintText: "Mobile no.",
                           filled: true,
                           fillColor: Colors.white,
                           enabledBorder: OutlineInputBorder(
@@ -129,7 +145,7 @@ class LoginState extends State<Login> {
                         ),
                         onChanged: (value) => {
                           setState(() {
-                            username = value;
+                            mobile = value;
                           })
                         },
                       ),
