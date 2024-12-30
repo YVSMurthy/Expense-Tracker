@@ -41,7 +41,7 @@ class Database:
             self.cursor.execute(query, (uniqueId, name, mobile, password, age, gender))
             self.connection.commit()
 
-            return {'status': 200}
+            return {'status': 200, 'user_id': uniqueId}
         except:
             return {'status': 500}
 
@@ -50,17 +50,29 @@ class Database:
     # getting users for login
     def getUserByMobile(self, mobile, password):
         try:
-            query = "select name, password from users where mobile = %s"
+            query = "select user_id, name, password from users where mobile = %s"
             self.cursor.execute(query, (mobile,))
 
             user = self.cursor.fetchone()
 
             if (user):
-                storedPassword = user[1]
+                storedPassword = user[2]
 
                 if (bcrypt.checkpw(password.encode('utf-8'), storedPassword.encode('utf-8'))):
-                    return {'status': 200, 'name': user[0]}
+                    return {'status': 200, 'user_id': user[0], 'name': user[1]}
             else:
                 return {'status': 401}
         except Exception as e:
             return {'status': 500, 'message': e}
+    
+    # updating the specifics of user profile
+    def updateUserProfile(self, userId, updates):
+        try:
+            query = f"update users set {', '.join(updates['fields'])} where user_id = %s"
+            updates['values'].append(userId)
+            self.cursor.execute(query, tuple(updates['values']))
+            self.connection.commit()
+
+            return {'status': 200}
+        except:
+            return {'status': 500}

@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:frontend/pages/dashboard.dart';
 import 'package:frontend/pages/signup.dart';
-import 'package:frontend/security/data_security.dart';
+import 'package:frontend/storage.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
@@ -27,7 +26,7 @@ class LoginState extends State<Login> {
     final loginURI = Uri.parse('http://192.168.101.3:3001/login');
     
     try {
-      final ds = DataSecurity();
+      final storage = Storage();
 
       final response = await http.post(loginURI,
         headers: {'Content-Type': 'application/json'},
@@ -37,10 +36,10 @@ class LoginState extends State<Login> {
       final data = json.decode(response.body);
 
       if (response.statusCode == 200) {;
-        final storage = FlutterSecureStorage();
-        await storage.write(key: 'name', value: ds.encrypt(data['name']));
-        await storage.write(key: 'mobile', value: ds.encrypt(mobile));
-        await storage.write(key: 'password', value: ds.encrypt(password));
+        await storage.set('user_id', data['user_id']);
+        await storage.set('name', data['name']);
+        await storage.set('mobile', mobile);
+        await storage.set('password', password);
 
         setState(() {
           mobile = "";
@@ -95,7 +94,7 @@ class LoginState extends State<Login> {
                   SizedBox(height: 20),
 
                   Text(
-              "Expense Tracker",
+                    "Expense Tracker",
                     style: TextStyle(
                       fontFamily: 'Courgette',
                       fontSize: 32,

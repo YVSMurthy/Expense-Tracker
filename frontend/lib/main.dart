@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:frontend/pages/login.dart';
 import 'package:frontend/pages/dashboard.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:frontend/storage.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -18,7 +18,6 @@ class MyApp extends StatefulWidget {
 }
 
 class ExpenseTracker extends State<MyApp> {
-  final storage = FlutterSecureStorage();
   String? token;
   bool loading = true;  // Add loading state
 
@@ -31,7 +30,8 @@ class ExpenseTracker extends State<MyApp> {
   Future<void> _loadToken() async {
     await Future.delayed(Duration(seconds: 2));
 
-    final storedToken = await storage.read(key: 'name');
+    final storage = Storage();
+    final storedToken = await storage.get('user_id');
 
     setState(() {
       token = storedToken;

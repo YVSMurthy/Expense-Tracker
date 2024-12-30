@@ -29,6 +29,11 @@ class DashboardState extends State<Dashboard> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      body: Container(
+        padding: EdgeInsets.fromLTRB(20, 60, 20, 0),
+        child: pages[currIndex]
+      ),
+      
       bottomNavigationBar: NavigationBar(
         onDestinationSelected: (int index) {
           setState(() {
@@ -59,11 +64,7 @@ class DashboardState extends State<Dashboard> {
             label: 'Settings',
           ),
         ],
-      ),
-      body: Container(
-        padding: EdgeInsets.fromLTRB(20, 60, 20, 20),
-        child: pages[currIndex]
-        ),
+      )
     );
   }
 }

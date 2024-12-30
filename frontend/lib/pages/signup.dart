@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/pages/dashboard.dart';
 import 'package:frontend/pages/login.dart';
-import 'package:frontend/security/data_security.dart';
+import 'package:frontend/storage.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class Signup extends StatefulWidget {
   const Signup({super.key});
@@ -44,12 +43,12 @@ class SignupState extends State<Signup> {
   }
 
   Future<void> registerUser() async {
-    final loginURI = Uri.parse('http://192.168.101.3:3001/register');
+    final signupURI = Uri.parse('http://192.168.101.3:3001/register');
     
     try {
-      final ds = DataSecurity();
+      final storage = Storage();
 
-      final response = await http.post(loginURI,
+      final response = await http.post(signupURI,
         headers: {'Content-Type': 'application/json'},
         body: json.encode({'name': name, 'mobile': mobile, 'password': password, 'age': age, 'gender': gender})
       );
@@ -57,10 +56,10 @@ class SignupState extends State<Signup> {
       final data = json.decode(response.body);
 
       if (response.statusCode == 200) {;
-        final storage = FlutterSecureStorage();
-        await storage.write(key: 'name', value: ds.encrypt(name));
-        await storage.write(key: 'mobile', value: ds.encrypt(mobile));
-        await storage.write(key: 'password', value: ds.encrypt(password));
+        await storage.set('user_id', data['user_id']);
+        await storage.set('name', data['name']);
+        await storage.set('mobile', mobile);
+        await storage.set('password', password);
 
         setState(() {
           name = "";

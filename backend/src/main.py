@@ -18,14 +18,11 @@ def login():
     print("Password : ", password)
 
     db = Database()
-
-    # based on the credentials, find the user and get the user data from there
     data = db.getUserByMobile(mobile, password)
-
     db.close()
     
     if (data['status'] == 200):
-        return jsonify({'message': 'ok', 'name': data['name']}), 200
+        return jsonify({'message': 'ok', 'user_id': data['user_id'], 'name': data['name']}), 200
     elif (data['status'] == 401):
         return jsonify({'message': 'Unauthorized access'}), 401
     else:
@@ -45,13 +42,35 @@ def register():
     hashedPassword = hashPassword(password)
 
     db = Database()
-
     data = db.createUserRecord(name, mobile, hashedPassword, age, gender)
+    db.close()
+
+    if (data['status'] == 200):
+        return jsonify({'message': 'ok', 'user_id': data['user_id']}), 200
+    elif (data['status'] == 500):
+        return jsonify({'message': 'Internal Server Error'}), 500
+
+@app.route('/updateProfile', methods=['POST'])
+def updateProfile():
+    data = request.get_json()
+
+    userId = data.get('user_id')
+    updates = data.get('updates')
+    passwordUpdated = data.get('passwordUpdated')
+
+    if (passwordUpdated == 1):
+        hashedPassword = hashPassword(updates['values'][-1])
+        updates['values'][-1] = hashedPassword
+
+    db = Database()
+    data = db.updateUserProfile(userId, updates)
+    db.close()
 
     if (data['status'] == 200):
         return jsonify({'message': 'ok'}), 200
     elif (data['status'] == 500):
         return jsonify({'message': 'Internal Server Error'}), 500
+    
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=3001, debug=False)
