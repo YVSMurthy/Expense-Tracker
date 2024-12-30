@@ -4,6 +4,7 @@ import 'package:frontend/pages/login.dart';
 import 'package:frontend/storage.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:frontend/components/warning_dialogue.dart';
 
 class Signup extends StatefulWidget {
   const Signup({super.key});
@@ -55,7 +56,7 @@ class SignupState extends State<Signup> {
 
       final data = json.decode(response.body);
 
-      if (response.statusCode == 200) {;
+      if (response.statusCode == 200) {
         await storage.set('user_id', data['user_id']);
         await storage.set('name', data['name']);
         await storage.set('mobile', mobile);
@@ -69,16 +70,22 @@ class SignupState extends State<Signup> {
           gender = "M";
         });
       } else {
-        print(data['message']);
+        if (mounted) {
+          showWarningDialog(context, data['title'], data['message']);
+        }
       }
     } catch(error) {
-      print('Error: $error');
+      if (mounted) {
+        showWarningDialog(context, "Internal Server Error", "Please try again.");
+      }
     }
 
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (context) => const Dashboard())
-    );
+    if (mounted) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const Dashboard())
+      );
+    }
   }
 
   @override

@@ -1,7 +1,7 @@
-import mysql.connector
+import mysql.connector # type: ignore for warning
 import os
-from dotenv import load_dotenv
-import bcrypt
+from dotenv import load_dotenv # type: ignore for warning
+import bcrypt # type: ignore for warning
 import uuid
 
 # loading environment variables
@@ -12,8 +12,6 @@ class Database:
     def __init__(self):
         user = os.getenv('USER')
         password = os.getenv('PASSWORD')
-
-        print("user: ", user)
 
         self.connection = mysql.connector.connect(
             host="localhost",

@@ -4,6 +4,8 @@ import 'package:frontend/pages/signup.dart';
 import 'package:frontend/storage.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'dart:core';
+import 'package:frontend/components/warning_dialogue.dart';
 
 class Login extends StatefulWidget {
   const Login({super.key});
@@ -21,13 +23,21 @@ class LoginState extends State<Login> {
 
   }
 
+  bool checkMobile() {
+    String mobilePattern = r'^[1-9][0-9]{9}';
+    RegExp mobileReg = RegExp(mobilePattern);
+    return mobileReg.hasMatch(mobile);
+  }
+
   // login user
   Future<void> verifyUser() async {
-    final loginURI = Uri.parse('http://192.168.101.3:3001/login');
+    if (!checkMobile()) {
+      showWarningDialog(context, "Invalid Mobile Number", "Please enter a valid 10-digit mobile number.");
+      return;
+    }
     
     try {
-      final storage = Storage();
-
+      final loginURI = Uri.parse('http://192.168.101.3:3001/login');
       final response = await http.post(loginURI,
         headers: {'Content-Type': 'application/json'},
         body: json.encode({'mobile': mobile, 'password': password})
@@ -35,7 +45,8 @@ class LoginState extends State<Login> {
 
       final data = json.decode(response.body);
 
-      if (response.statusCode == 200) {;
+      if (response.statusCode == 200) {
+        final storage = Storage();
         await storage.set('user_id', data['user_id']);
         await storage.set('name', data['name']);
         await storage.set('mobile', mobile);
@@ -46,17 +57,25 @@ class LoginState extends State<Login> {
           password = "";
         });
 
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => const Dashboard())
-        );
+        if (mounted) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const Dashboard())
+          );
+        }
       } else if (response.statusCode == 401) {
-        print("Unauthorized user");
+        if (mounted) {
+          showWarningDialog(context, data['title'], data['message']);
+        }
       } else {
-        print(data['message']);
+        if (mounted) {
+          showWarningDialog(context, data['title'], data['message']);
+        }
       }
     } catch(error) {
-      print('Error: $error');
+      if (mounted) {
+        showWarningDialog(context, "Internal Server Error", "Please try again.");
+      }
     }
   }
 

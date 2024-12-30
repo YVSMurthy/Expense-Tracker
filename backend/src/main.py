@@ -1,6 +1,6 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify # type: ignore for warning
 from database import Database
-import bcrypt
+import bcrypt # type: ignore for warning
 
 app = Flask(__name__)
 
@@ -24,10 +24,10 @@ def login():
     if (data['status'] == 200):
         return jsonify({'message': 'ok', 'user_id': data['user_id'], 'name': data['name']}), 200
     elif (data['status'] == 401):
-        return jsonify({'message': 'Unauthorized access'}), 401
+        return jsonify({'title': 'Unauthorized access', 'message': 'Please verify your credentials and try again'}), 401
     else:
         print(data['message'])
-        return jsonify({'message': "Internal server error"}), 500
+        return jsonify({'title': "Internal server error", 'message': 'Please try again.'}), 500
 
 @app.route('/register', methods=['POST'])
 def register():
@@ -48,7 +48,7 @@ def register():
     if (data['status'] == 200):
         return jsonify({'message': 'ok', 'user_id': data['user_id']}), 200
     elif (data['status'] == 500):
-        return jsonify({'message': 'Internal Server Error'}), 500
+        return jsonify({'title': "Internal server error", 'message': 'Please try again.'}), 500
 
 @app.route('/updateProfile', methods=['POST'])
 def updateProfile():
@@ -69,7 +69,7 @@ def updateProfile():
     if (data['status'] == 200):
         return jsonify({'message': 'ok'}), 200
     elif (data['status'] == 500):
-        return jsonify({'message': 'Internal Server Error'}), 500
+        return jsonify({'title': "Internal server error", 'message': 'Please try again.'}), 500
     
 
 if __name__ == '__main__':

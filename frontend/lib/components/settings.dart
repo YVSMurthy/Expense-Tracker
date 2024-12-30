@@ -1,9 +1,10 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:frontend/storage.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'dart:core';
+import 'package:frontend/components/warning_dialogue.dart';
 
 class Settings extends StatefulWidget {
   const Settings({super.key});
@@ -29,8 +30,8 @@ class SettingsState extends State<Settings> {
   String updatedCategories = "";
 
   bool checkUpdates() {
-    String namePattern = r'^[a-zA-Z]+';
-    String mobilePattern = r'^[1-9][0-9]{9}';
+    String namePattern = r'^[a-zA-Z ]+$';
+    String mobilePattern = r'^[1-9][0-9]{9}$';
     String pwdPattern = r'^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,16}$';
 
     RegExp nameReg = RegExp(namePattern);
@@ -38,15 +39,21 @@ class SettingsState extends State<Settings> {
     RegExp pwdReg = RegExp(pwdPattern);
 
     if (!nameReg.hasMatch(nameController.text)) {
-      print("Name should only have alphabets");
+      if (mounted) {
+        showWarningDialog(context, "Invalid Name", "Name should have only consist of alphabets");
+      }
       return false;
     }
     if (!mobileReg.hasMatch(mobileController.text)) {
-      print("Mobile should only have 10 digits");
+      if (mounted) {
+        showWarningDialog(context, "Inavlid Mobile Number", "Please enter a valid 10-digit mobile number");
+      }
       return false;
     }
     if (!pwdReg.hasMatch(passwordController.text)) {
-      print("Password should have min 1 uppercase, lowercase, symbol and number, and of length 8 to 16");
+      if (mounted) {
+        showWarningDialog(context, "Password not in proper format", "Password should be of length 8 to 16, with atleast 1 of each uppercase character, lowercase character, special symbol, and digits");
+      }
       return false;
     }
 
@@ -71,33 +78,37 @@ class SettingsState extends State<Settings> {
       values.add(passwordController.text);
       passwordUpdated = 1;
     }
-    // updating in database
-    final uri = Uri.parse('http://192.168.101.3:3001/updateProfile');
-    final response = await http.post(uri,
-      headers: {'Context-Type': 'application/json'},
-      body: json.encode({
-        'user_id': userId, 
-        'passwordUpdated': passwordUpdated, 
-        'updates': {'fields': fields, 'values': values}})
-    );
 
-    final data = json.decode(response.body);
+    if (fields.isNotEmpty) {
+      // updating in database
+      final uri = Uri.parse('http://192.168.101.3:3001/updateProfile');
+      final response = await http.post(uri,
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({
+          'user_id': userId, 
+          'passwordUpdated': passwordUpdated, 
+          'updates': {'fields': fields, 'values': values}})
+      );
 
-    if (response.statusCode == 200) {
-      setState(() {
-        name = nameController.text;
-        mobile = mobileController.text;
-        password = passwordController.text;
-      });
+      final data = json.decode(response.body);
 
-      // updating in storage
-      await storage.set('name', name);
-      await storage.set('mobile', mobile);
-      await storage.set('password', password);
-    } else if (response.statusCode == 500) {
-      print(data['message']);
+      if (response.statusCode == 200) {
+        setState(() {
+          name = nameController.text;
+          mobile = mobileController.text;
+          password = passwordController.text;
+        });
+
+        // updating in storage
+        await storage.set('name', name);
+        await storage.set('mobile', mobile);
+        await storage.set('password', password);
+      } else if (response.statusCode == 500) {
+        if (mounted) {
+            showWarningDialog(context, data['title'], data['message']);
+          }
+      }
     }
-
   }
 
   void addCategory() {
@@ -181,13 +192,32 @@ class SettingsState extends State<Settings> {
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  "Profile",
-                  style: TextStyle(
-                    fontSize: 32,
-                    fontFamily: 'Arial',
-                    fontWeight: FontWeight.bold,
-                  )
+                Row(
+                  children: [
+                    Text(
+                      "Profile",
+                      style: TextStyle(
+                        fontSize: 32,
+                        fontFamily: 'Arial',
+                        fontWeight: FontWeight.bold,
+                      )
+                    ),
+                    SizedBox(width: 205),
+                    GestureDetector(
+                      onTap: () {
+                        if (checkUpdates()) {
+                          if (profileIsEditable) {
+                            updateProfile();
+                          }
+
+                          setState(() {
+                            profileIsEditable = !profileIsEditable;
+                          });
+                        }
+                      },
+                      child: profileIsEditable ? Icon(Icons.save, color: Colors.blue.shade500, size: 30) : Icon(Icons.edit)
+                    )
+                  ],
                 ),
 
                 SizedBox(height: 10),
@@ -198,7 +228,8 @@ class SettingsState extends State<Settings> {
                       padding: EdgeInsets.all(36),
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        color: Colors.purple.shade300
+                        // color: Colors.purple.shade300
+                        color: Color.fromARGB(255, Random().nextInt(192), Random().nextInt(192), Random().nextInt(192))
                       ),
                       child: Text(
                         name[0],
@@ -217,12 +248,16 @@ class SettingsState extends State<Settings> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisAlignment: MainAxisAlignment.start,
                       children: [
-                        Text(
-                          name,
-                          style: TextStyle(
-                            fontFamily: 'Times',
-                            fontWeight: FontWeight.bold,
-                            fontSize: 28,
+                        SizedBox(
+                          width: w*0.45, // Limit width
+                          child: Text(
+                            name,
+                            style: TextStyle(
+                              fontFamily: 'Times',
+                              fontWeight: FontWeight.bold,
+                              fontSize: 28,
+                            ),
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
                         Text(
@@ -235,24 +270,7 @@ class SettingsState extends State<Settings> {
                         )
                       ],
                     ),
-
-                    SizedBox(width: 90,),
-
-                    GestureDetector(
-                      onTap: () {
-                        if (checkUpdates()) {
-                          if (profileIsEditable) {
-                            updateProfile();
-                          }
-
-                          setState(() {
-                            profileIsEditable = !profileIsEditable;
-                          });
-                        }
-                      },
-                      child: profileIsEditable ? Icon(Icons.save, color: Colors.blue.shade500, size: 30) : Icon(Icons.edit)
-                    )
-                  ],
+                  ]
                 ),
 
                 profileIsEditable ? Column(
@@ -595,7 +613,9 @@ class SettingsState extends State<Settings> {
                   Icon(Icons.logout, size: 35,)
                 ] 
               ),
-            )
+            ),
+
+            SizedBox(height: 30,),
           ],
         )
       )
