@@ -62,6 +62,62 @@ class Database:
                 return {'status': 401}
         except Exception as e:
             return {'status': 500, 'message': e}
+        
+    # get the monthly budget of a particular userId
+    def getBudget(self, userId):
+        try:
+            query = "select budget from monthly_budget where user_id = %s"
+            self.cursor.execute(query, (userId,))
+
+            budget = self.cursor.fetchone()
+
+            return {'status': 200, 'monthly_budget': budget[0]}
+        except:
+            return {'status': 500}
+        
+    # get the monthly budget of a particular userId
+    def getCategories(self, userId):
+        try:
+            query = "select cat_name, allotted_amount from categories where user_id = %s"
+            self.cursor.execute(query, (userId,))
+
+            categories = self.cursor.fetchall()
+
+            return {'status': 200, 'categories': categories}
+        except:
+            return {'status': 500}
+        
+    # adding new category
+    def addCategory(self, userId, catName, allotedAmount, monthlyBudget):
+        try:
+            # query to update the categories
+            query = "insert into categories (user_id, cat_name, allotted_amount) values (%s, %s, %s)"
+            self.cursor.execute(query, (userId, catName.title(), allotedAmount))
+
+            query = "update monthly_budget set budget = %s where user_id = %s"
+            self.cursor.execute(query, ((monthlyBudget+allotedAmount), userId))
+
+            self.connection.commit()
+
+            return {'status': 200}
+        except:
+            return {'status': 500}
+    
+    # adding new category
+    def deleteCategory(self, userId, catName, monthlyBudget):
+        try:
+            # query to update the categories
+            query = "delete from categories where user_id = %s and cat_name = %s"
+            self.cursor.execute(query, (userId, catName))
+
+            query = "update monthly_budget set budget = %s where user_id = %s"
+            self.cursor.execute(query, (monthlyBudget, userId))
+
+            self.connection.commit()
+
+            return {'status': 200}
+        except:
+            return {'status': 500}
     
     # updating the specifics of user profile
     def updateUserProfile(self, userId, updates):
@@ -72,5 +128,30 @@ class Database:
             self.connection.commit()
 
             return {'status': 200}
+        except:
+            return {'status': 500}
+    
+    # updating the category names and the allotted budget
+    def updateCategories(self, userId, updatedBudgets, updatedCategories, monthlyBudget):
+        try:
+            # query for updating the budget
+            if (len(updatedBudgets) != 0):
+                for (category, budget) in updatedBudgets.items():
+                    query = "update categories set allotted_amount = %s where user_id = %s and cat_name = %s"
+                    self.cursor.execute(query, (budget, userId, category))
+                
+                query = "update monthly_budget set budget = %s where user_id = %s"
+                self.cursor.execute(query, (monthlyBudget, userId))
+            
+            # query for updating categories
+            if (len(updatedCategories) != 0):
+                for (oldCategory, newCategory) in updatedCategories.items():
+                    query = "update categories set cat_name = %s where user_id = %s and cat_name = %s"
+                    self.cursor.execute(query, (newCategory, userId, oldCategory))
+            
+            self.connection.commit()
+
+            return {'status': 200}
+                
         except:
             return {'status': 500}

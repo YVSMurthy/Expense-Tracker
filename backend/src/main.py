@@ -18,15 +18,15 @@ def login():
     print("Password : ", password)
 
     db = Database()
-    data = db.getUserByMobile(mobile, password)
+    response = db.getUserByMobile(mobile, password)
     db.close()
     
-    if (data['status'] == 200):
-        return jsonify({'message': 'ok', 'user_id': data['user_id'], 'name': data['name']}), 200
-    elif (data['status'] == 401):
+    if (response['status'] == 200):
+        return jsonify({'message': 'ok', 'user_id': response['user_id'], 'name': response['name']}), 200
+    elif (response['status'] == 401):
         return jsonify({'title': 'Unauthorized access', 'message': 'Please verify your credentials and try again'}), 401
     else:
-        print(data['message'])
+        print(response['message'])
         return jsonify({'title': "Internal server error", 'message': 'Please try again.'}), 500
 
 @app.route('/register', methods=['POST'])
@@ -42,12 +42,77 @@ def register():
     hashedPassword = hashPassword(password)
 
     db = Database()
-    data = db.createUserRecord(name, mobile, hashedPassword, age, gender)
+    response = db.createUserRecord(name, mobile, hashedPassword, age, gender)
     db.close()
 
-    if (data['status'] == 200):
-        return jsonify({'message': 'ok', 'user_id': data['user_id']}), 200
-    elif (data['status'] == 500):
+    if (response['status'] == 200):
+        return jsonify({'message': 'ok', 'user_id': response['user_id']}), 200
+    elif (response['status'] == 500):
+        return jsonify({'title': "Internal server error", 'message': 'Please try again.'}), 500
+
+@app.route('/getBudget', methods=['POST'])
+def getBudget():
+    data = request.get_json()
+
+    userId = data.get('user_id')
+
+    db = Database()
+    response = db.getBudget(userId)
+    db.close()
+
+    if (response['status'] == 200):
+        return jsonify({'message': 'ok', 'monthly_budget': response['monthly_budget']}), 200
+    elif (response['status'] == 500):
+        return jsonify({'title': "Internal server error", 'message': 'Please try again.'}), 500
+    
+@app.route('/getCategories', methods=['POST'])
+def getCategories():
+    data = request.get_json()
+
+    userId = data.get('user_id')
+
+    db = Database()
+    response = db.getCategories(userId)
+    db.close()
+
+    if (response['status'] == 200):
+        return jsonify({'message': 'ok', 'categories': response['categories']}), 200
+    elif (response['status'] == 500):
+        return jsonify({'title': "Internal server error", 'message': 'Please try again.'}), 500
+
+@app.route('/addCategory', methods=['POST'])
+def addCategory():
+    data = request.get_json()
+
+    userId = data.get('user_id')
+    catName = data.get('cat_name')
+    amountAllotted = data.get('allotted_budget')
+    monthlyBudget = data.get('monthly_budget')
+
+    db = Database()
+    response = db.addCategory(userId, catName, amountAllotted, monthlyBudget)
+    db.close()
+
+    if (response['status'] == 200):
+        return jsonify({'message': 'ok'}), 200
+    elif (response['status'] == 500):
+        return jsonify({'title': "Internal server error", 'message': 'Please try again.'}), 500
+
+@app.route('/deleteCategory', methods=['POST'])
+def deleteCategory():
+    data = request.get_json()
+
+    userId = data.get('user_id')
+    catName = data.get('cat_name')
+    monthlyBudget = data.get('monthly_budget')
+
+    db = Database()
+    response = db.deleteCategory(userId, catName, monthlyBudget)
+    db.close()
+
+    if (response['status'] == 200):
+        return jsonify({'message': 'ok'}), 200
+    elif (response['status'] == 500):
         return jsonify({'title': "Internal server error", 'message': 'Please try again.'}), 500
 
 @app.route('/updateProfile', methods=['POST'])
@@ -63,14 +128,31 @@ def updateProfile():
         updates['values'][-1] = hashedPassword
 
     db = Database()
-    data = db.updateUserProfile(userId, updates)
+    response = db.updateUserProfile(userId, updates)
     db.close()
 
-    if (data['status'] == 200):
+    if (response['status'] == 200):
         return jsonify({'message': 'ok'}), 200
-    elif (data['status'] == 500):
+    elif (response['status'] == 500):
         return jsonify({'title': "Internal server error", 'message': 'Please try again.'}), 500
-    
+
+@app.route('/updateGoals', methods=['POST'])
+def updateGoals():
+    data = request.get_json()
+
+    userId = data.get('user_id')
+    updatedBudgtes = data.get('updated_budget')
+    updatedCategories = data.get('updated_categories')
+    monthlyBudget = data.get('monthly_budget')
+
+    db = Database()
+    response = db.updateCategories(userId, updatedBudgtes, updatedCategories, monthlyBudget)
+    db.close()
+
+    if (response['status'] == 200):
+        return jsonify({'message': 'ok'}), 200
+    elif (response['status'] == 500):
+        return jsonify({'title': "Internal server error", 'message': 'Please try again.'}), 500
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=3001, debug=False)

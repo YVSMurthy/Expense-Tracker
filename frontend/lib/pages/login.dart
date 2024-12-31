@@ -63,10 +63,6 @@ class LoginState extends State<Login> {
             MaterialPageRoute(builder: (context) => const Dashboard())
           );
         }
-      } else if (response.statusCode == 401) {
-        if (mounted) {
-          showWarningDialog(context, data['title'], data['message']);
-        }
       } else {
         if (mounted) {
           showWarningDialog(context, data['title'], data['message']);

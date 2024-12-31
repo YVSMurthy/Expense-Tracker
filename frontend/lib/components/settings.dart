@@ -1,10 +1,11 @@
-import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:frontend/pages/login.dart';
 import 'package:frontend/storage.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'dart:core';
 import 'package:frontend/components/warning_dialogue.dart';
+import 'package:frontend/components/add_category_popup.dart';
 
 class Settings extends StatefulWidget {
   const Settings({super.key});
@@ -15,6 +16,7 @@ class Settings extends StatefulWidget {
 
 class SettingsState extends State<Settings> {
   final storage = Storage();
+  final backendUri = "http://192.168.101.3:3001";
 
   String userId = "", name = " ", mobile = " ", password = " ";
   TextEditingController nameController = TextEditingController();
@@ -24,10 +26,9 @@ class SettingsState extends State<Settings> {
 
   double monthlyBudget = 0.0;
   bool goalIsEditable = false;
-  List<String> categories = [];
-  List<double> allottedBudget = [];
-  double updatedBudget = 0;
-  String updatedCategories = "";
+  List<String> categories = [], categoriesCopy = [];
+  List<double> allottedBudget = [], budgetCopy = [];
+  double newBudget = 0;
 
   bool checkUpdates() {
     String namePattern = r'^[a-zA-Z ]+$';
@@ -80,67 +81,194 @@ class SettingsState extends State<Settings> {
     }
 
     if (fields.isNotEmpty) {
-      // updating in database
-      final uri = Uri.parse('http://192.168.101.3:3001/updateProfile');
+      try {
+        // updating in database
+        final uri = Uri.parse("$backendUri/updateProfile");
+        final response = await http.post(uri,
+          headers: {'Content-Type': 'application/json'},
+          body: json.encode({
+            'user_id': userId, 
+            'passwordUpdated': passwordUpdated, 
+            'updates': {'fields': fields, 'values': values}})
+        );
+
+        final data = json.decode(response.body);
+
+        if (response.statusCode == 200) {
+          setState(() {
+            name = nameController.text;
+            mobile = mobileController.text;
+            password = passwordController.text;
+          });
+
+          // updating in storage
+          await storage.set('name', name);
+          await storage.set('mobile', mobile);
+          await storage.set('password', password);
+        } else if (response.statusCode == 500) {
+          if (mounted) {
+              showWarningDialog(context, data['title'], data['message']);
+            }
+        }
+      } catch(error) {
+        if (mounted) {
+          showWarningDialog(context, "Internal Server Error", "Please try again.");
+        }
+      }
+    }
+  }
+
+  void addCategory() async {
+    var result = await showAddCategoryDialog(context);
+    if (result != null) {
+      if (mounted) {
+        try {
+          final uri = Uri.parse('$backendUri/addCategory');
+          final response = await http.post(uri,
+            headers: {'Content-Type': 'application/json'},
+            body: json.encode({
+              'user_id': userId,
+              'cat_name': result['catName'],
+              'allotted_budget': result['allottedAmount'],
+              'monthly_budget': monthlyBudget
+            })
+          );
+
+          final data = json.decode(response.body);
+
+          if (response.statusCode == 200) {
+            setState(() {
+              categories.add(result['catName']);
+              allottedBudget.add(result['allottedAmount']);
+              monthlyBudget += result['allottedAmount'];
+            });
+
+            print(categories);
+            print(allottedBudget);
+            print(categories.length);
+            print(allottedBudget.length);
+          }
+          else {
+            if (mounted) {
+              showWarningDialog(context, data['title'], data['message']);
+            }
+          }
+        } catch(error) {
+          if (mounted) {
+            showWarningDialog(context, "Internal Server Error", "Please try again.");
+          }
+        }
+      }
+    }
+  }
+
+  void deleteCategory(int index) async {
+    try {
+      final uri = Uri.parse('$backendUri/deleteCategory');
       final response = await http.post(uri,
         headers: {'Content-Type': 'application/json'},
         body: json.encode({
-          'user_id': userId, 
-          'passwordUpdated': passwordUpdated, 
-          'updates': {'fields': fields, 'values': values}})
+          'user_id': userId,
+          'cat_name': categories[index],
+          'monthly_budget': monthlyBudget-allottedBudget[index]
+        })
       );
 
       final data = json.decode(response.body);
 
       if (response.statusCode == 200) {
-        setState(() {
-          name = nameController.text;
-          mobile = mobileController.text;
-          password = passwordController.text;
-        });
-
-        // updating in storage
-        await storage.set('name', name);
-        await storage.set('mobile', mobile);
-        await storage.set('password', password);
-      } else if (response.statusCode == 500) {
+        if (index >= 0 && index < categories.length) {
+          setState(() {
+            monthlyBudget -= allottedBudget[index];
+            categories.removeAt(index);
+            categoriesCopy.removeAt(index);
+            allottedBudget.removeAt(index);
+            budgetCopy.removeAt(index);
+          });
+        }
+      }
+      else {
         if (mounted) {
-            showWarningDialog(context, data['title'], data['message']);
-          }
+          showWarningDialog(context, data['title'], data['message']);
+        }
+      }
+    } catch(error) {
+      if (mounted) {
+        showWarningDialog(context, "Error", "$error");
       }
     }
   }
 
-  void addCategory() {
-    final num = categories.length+1;
-    final String categoryName = "Category $num";
-    setState(() {
-      categories.add(categoryName);
-      allottedBudget.add(0.0);
-    });
-  }
+  void updatedGoals() async {
+    // checking if the goals have been edited
+    bool categoryIsUpdated = false;
+    bool budgetIsUpdated = false;
 
-  void deleteCategory(int index) {
-    setState(() {
-      monthlyBudget -= allottedBudget[index];
-      categories.remove(categories[index]);
-    });
-  }
+    for (int i = 0; i < categories.length; i++) {
+      if (categories[i] != categoriesCopy[i]) {
+        categoryIsUpdated = true;
+        break;
+      }
+      if (allottedBudget[i] != budgetCopy[i]) {
+        budgetIsUpdated = true;
+        break;
+      }
+    }
 
-  void updateBudget(double updatedBudget, int index) {
-    setState(() {
-      monthlyBudget = monthlyBudget - allottedBudget[index] + updatedBudget;
-      allottedBudget[index] = updatedBudget;
-    });
+    // update to database only if some changes have been made
+    if (categoryIsUpdated || budgetIsUpdated) {
+      Map<String, double> updatedBudgets = {};
+      Map<String, String> updatedCategories = {};
 
-  }
+      if (categoryIsUpdated) {
+        for (int i = 0; i < categories.length; i++) {
+          if (categories[i] != categoriesCopy[i]) {
+            updatedCategories.addAll({categoriesCopy[i]: categories[i]});
+          }
+        }
+      }
+      if (budgetIsUpdated) {
+        for (int i = 0; i < allottedBudget.length; i++) {
+          if (allottedBudget[i] != budgetCopy[i]) {
+            updatedBudgets.addAll({categoriesCopy[i]: allottedBudget[i]});
+          }
+        }
+      }
 
-  void updatedGoals() {
+      try {
+        final updateGoalUri = Uri.parse("$backendUri/updateGoals");
+        final response = await http.post(updateGoalUri,
+          headers: {'Content-Type': 'application.json'},
+          body: json.encode({
+            'user_id': userId,
+            'updated_budget': updatedBudgets,
+            'updated_categories': updatedCategories,
+            'monthly_budget': monthlyBudget
+          })
+        );
 
+        final data = json.decode(response.body);
+
+        if (response.statusCode == 200) {
+          setState(() {
+            categoriesCopy = categories;
+            budgetCopy = allottedBudget;
+          });
+        } else if (response.statusCode == 500) {
+          if (mounted) {
+            showWarningDialog(context, data['title'], data['message']);
+          }
+        }
+      } catch(error) {
+        if (mounted) {
+          showWarningDialog(context, "Internal Server Error", "Please try again.");
+        }
+      }
+    }
   }
 
   _loadDetails() async {
-
+    // loading profile details
     final storedName = await storage.get('name');
     final storedMobile = await storage.get('mobile');
     final storedPassword = await storage.get('password');
@@ -156,26 +284,46 @@ class SettingsState extends State<Settings> {
     nameController.text = storedName!;
     mobileController.text = storedMobile!;
     passwordController.text = storedPassword!;
+
+    // goal related loading
+    final budgetUri = Uri.parse('$backendUri/getBudget');
+    final budgetResponse = await http.post(budgetUri,
+      headers: {'Content-Type': 'application/json'},
+      body: json.encode({
+        'user_id': userId
+      })
+    );
+
+    final budgetData = json.decode(budgetResponse.body);
+
+    setState(() {
+      monthlyBudget = double.parse(budgetData['monthly_budget']);
+    });
+
+    final categoriesUri = Uri.parse('$backendUri/getCategories');
+    final categoriesResponse = await http.post(categoriesUri,
+      headers: {'Content-Type': 'application/json'},
+      body: json.encode({
+        'user_id': userId
+      })
+    );
+
+    final categoriesData = json.decode(categoriesResponse.body)['categories'];
+
+    setState(() {
+      for (int i = 0; i < categoriesData.length; i++) {
+        categories.add(categoriesData[i][0]);
+        categoriesCopy.add(categoriesData[i][0]);
+        allottedBudget.add(double.parse(categoriesData[i][1]));
+        budgetCopy.add(double.parse(categoriesData[i][1]));
+      }
+    });
   }
 
   @override
   void initState() {
     super.initState();
     _loadDetails();
-
-    allottedBudget = [1500.00, 300.00];
-    categories = ['Food', 'Stationary'];
-
-    double budget = 0;
-    for (int i = 0; i < categories.length; i++) {
-      budget += allottedBudget[i];
-    }
-
-    setState(() {
-      monthlyBudget = budget;
-    });
-
-    
   }
 
   @override
@@ -229,7 +377,7 @@ class SettingsState extends State<Settings> {
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         // color: Colors.purple.shade300
-                        color: Color.fromARGB(255, Random().nextInt(192), Random().nextInt(192), Random().nextInt(192))
+                        color: Colors.purple.shade400
                       ),
                       child: Text(
                         name[0],
@@ -506,18 +654,18 @@ class SettingsState extends State<Settings> {
                   ]
                 ),
 
-                ConstrainedBox(
-                  constraints: BoxConstraints(maxHeight: h),
+                Container(
+                  constraints: BoxConstraints(maxHeight: h*0.4, minHeight: 20),
                   child: ListView.builder(
                     itemCount: categories.length,
                     itemBuilder: (BuildContext context, int index) {
                       return ListTile(
-                        leading: GestureDetector(
+                        leading: !goalIsEditable ? GestureDetector(
                           onTap: () {
-                            deleteCategory(index);
+                            !goalIsEditable ? deleteCategory(index) : null;
                           },
                           child: Icon(Icons.delete, color: Colors.red,)
-                        ),
+                        ) : null,
                         trailing: Container(
                           child: goalIsEditable ? SizedBox(
                             width: w*0.25,
@@ -539,8 +687,12 @@ class SettingsState extends State<Settings> {
                                 border: OutlineInputBorder(),
                               ),
                               onSubmitted: (value) {
-                                double updatedBudget = (value == "") ? 0 : double.parse(value);
-                                updateBudget(updatedBudget, index);
+                                allottedBudget[index] = (value == "") ? allottedBudget[index] : double.parse(value);
+                                if (allottedBudget[index] != budgetCopy[index]) {
+                                  setState(() {
+                                    monthlyBudget = monthlyBudget - allottedBudget[index] + budgetCopy[index];
+                                  });
+                                }
                               },
                             )
                           ) : Text(
@@ -572,9 +724,9 @@ class SettingsState extends State<Settings> {
                                 ),
                                 border: OutlineInputBorder(),
                               ),
-                              onChanged: (value) {
+                              onSubmitted: (value) {
                                 setState(() {
-                                  categories[index] = value;
+                                  categories[index] = (value == "") ? categories[index] : value;
                                 });
                               },
                             )
@@ -601,21 +753,27 @@ class SettingsState extends State<Settings> {
             GestureDetector(
               onTap: () {
                 storage.clear();
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (context) => const Login())
+                );
               },
               child: Row(
                 children: [
+                  SizedBox(width: 10),
                   Text(
                     "Logout",
                     style: TextStyle(
                       fontSize: 26, 
                     ),
                   ),
-                  Icon(Icons.logout, size: 35,)
+                  SizedBox(width: 10,),
+                  Icon(Icons.logout, size: 32,)
                 ] 
               ),
             ),
 
-            SizedBox(height: 30,),
+            SizedBox(height: 60,),
           ],
         )
       )
