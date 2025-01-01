@@ -44,7 +44,7 @@ class SignupState extends State<Signup> {
   }
 
   Future<void> registerUser() async {
-    final signupURI = Uri.parse('http://192.168.101.3:3001/register');
+    final signupURI = Uri.parse('http://192.168.101.3:3001/auth/register');
     
     try {
       final storage = Storage();
@@ -98,7 +98,7 @@ class SignupState extends State<Signup> {
         child: Stack(
           children: [
             Positioned(
-              top: -h*0.84,
+              top: -h*0.9,
               left: -w*0.75,
               child: Container(
                 height: h*2,
@@ -113,7 +113,7 @@ class SignupState extends State<Signup> {
             Container(
               height: h,
               width: w,
-              padding: EdgeInsets.fromLTRB(20, 60, 20, 20),
+              padding: EdgeInsets.fromLTRB(20, 40, 20, 20),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 mainAxisAlignment: MainAxisAlignment.start,
@@ -135,7 +135,7 @@ class SignupState extends State<Signup> {
                       hintText: "Name",
                       filled: true,
                       fillColor: Colors.white,
-                      contentPadding: EdgeInsets.all(20),
+                      contentPadding: EdgeInsets.all(14),
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(10.0), // Adds rounded corners
                         borderSide: BorderSide(color: Colors.white),
@@ -159,7 +159,7 @@ class SignupState extends State<Signup> {
                       hintText: "Mobile No.",
                       filled: true,
                       fillColor: Colors.white,
-                      contentPadding: EdgeInsets.all(20),
+                      contentPadding: EdgeInsets.all(15),
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(10.0), // Adds rounded corners
                         borderSide: BorderSide(color: Colors.white),
@@ -183,7 +183,7 @@ class SignupState extends State<Signup> {
                       hintText: "Password",
                       filled: true,
                       fillColor: Colors.white,
-                      contentPadding: EdgeInsets.all(20),
+                      contentPadding: EdgeInsets.all(15),
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(10.0), // Adds rounded corners
                         borderSide: BorderSide(color: Colors.white),
@@ -212,7 +212,7 @@ class SignupState extends State<Signup> {
                             hintText: "Age",
                             filled: true,
                             fillColor: Colors.white,
-                            contentPadding: EdgeInsets.all(20),
+                            contentPadding: EdgeInsets.all(15),
                             enabledBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(10.0), // Adds rounded corners
                               borderSide: BorderSide(color: Colors.white),
@@ -232,7 +232,7 @@ class SignupState extends State<Signup> {
                       ),
                       
 
-                      SizedBox(width: 40),
+                      SizedBox(width: 32),
 
                       Container(
                         width: w * 0.4,

@@ -37,7 +37,7 @@ class LoginState extends State<Login> {
     }
     
     try {
-      final loginURI = Uri.parse('http://192.168.101.3:3001/login');
+      final loginURI = Uri.parse('http://192.168.101.3:3001/auth/login');
       final response = await http.post(loginURI,
         headers: {'Content-Type': 'application/json'},
         body: json.encode({'mobile': mobile, 'password': password})

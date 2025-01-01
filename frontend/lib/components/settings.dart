@@ -16,7 +16,7 @@ class Settings extends StatefulWidget {
 
 class SettingsState extends State<Settings> {
   final storage = Storage();
-  final backendUri = "http://192.168.101.3:3001";
+  final backendUri = "http://192.168.101.3:3001/update";
 
   String userId = "", name = " ", mobile = " ", password = " ";
   TextEditingController nameController = TextEditingController();
@@ -142,11 +142,6 @@ class SettingsState extends State<Settings> {
               allottedBudget.add(result['allottedAmount']);
               monthlyBudget += result['allottedAmount'];
             });
-
-            print(categories);
-            print(allottedBudget);
-            print(categories.length);
-            print(allottedBudget.length);
           }
           else {
             if (mounted) {

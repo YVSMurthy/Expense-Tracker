@@ -5,17 +5,17 @@ import bcrypt # type: ignore for warning
 app = Flask(__name__)
 
 # hash function
-def hashPassword(password):
+def hashText(password):
     salt = bcrypt.gensalt()
     return bcrypt.hashpw(password.encode('utf-8'), salt).decode()
 
-@app.route('/login', methods=['POST'])
+# authentication routes ------------------------------------------------------------------------------------------------
+@app.route('/auth/login', methods=['POST'])
 def login():
     data = request.get_json()
+
     mobile = data.get('mobile')
     password = data.get('password')
-    print("Mobile No. : ", mobile)
-    print("Password : ", password)
 
     db = Database()
     response = db.getUserByMobile(mobile, password)
@@ -29,7 +29,7 @@ def login():
         print(response['message'])
         return jsonify({'title': "Internal server error", 'message': 'Please try again.'}), 500
 
-@app.route('/register', methods=['POST'])
+@app.route('/auth/register', methods=['POST'])
 def register():
     data = request.get_json()
 
@@ -39,7 +39,7 @@ def register():
     age = int(data.get('age'))
     gender = data.get('gender')
 
-    hashedPassword = hashPassword(password)
+    hashedPassword = hashText(password)
 
     db = Database()
     response = db.createUserRecord(name, mobile, hashedPassword, age, gender)
@@ -50,7 +50,9 @@ def register():
     elif (response['status'] == 500):
         return jsonify({'title': "Internal server error", 'message': 'Please try again.'}), 500
 
-@app.route('/getBudget', methods=['POST'])
+
+# update routes --------------------------------------------------------------------------------------------------------
+@app.route('/update/getBudget', methods=['POST'])
 def getBudget():
     data = request.get_json()
 
@@ -65,7 +67,7 @@ def getBudget():
     elif (response['status'] == 500):
         return jsonify({'title': "Internal server error", 'message': 'Please try again.'}), 500
     
-@app.route('/getCategories', methods=['POST'])
+@app.route('/update/getCategories', methods=['POST'])
 def getCategories():
     data = request.get_json()
 
@@ -80,7 +82,7 @@ def getCategories():
     elif (response['status'] == 500):
         return jsonify({'title': "Internal server error", 'message': 'Please try again.'}), 500
 
-@app.route('/addCategory', methods=['POST'])
+@app.route('/update/addCategory', methods=['POST'])
 def addCategory():
     data = request.get_json()
 
@@ -98,7 +100,7 @@ def addCategory():
     elif (response['status'] == 500):
         return jsonify({'title': "Internal server error", 'message': 'Please try again.'}), 500
 
-@app.route('/deleteCategory', methods=['POST'])
+@app.route('/update/deleteCategory', methods=['POST'])
 def deleteCategory():
     data = request.get_json()
 
@@ -115,7 +117,7 @@ def deleteCategory():
     elif (response['status'] == 500):
         return jsonify({'title': "Internal server error", 'message': 'Please try again.'}), 500
 
-@app.route('/updateProfile', methods=['POST'])
+@app.route('/update/updateProfile', methods=['POST'])
 def updateProfile():
     data = request.get_json()
 
@@ -124,7 +126,7 @@ def updateProfile():
     passwordUpdated = data.get('passwordUpdated')
 
     if (passwordUpdated == 1):
-        hashedPassword = hashPassword(updates['values'][-1])
+        hashedPassword = hashText(updates['values'][-1])
         updates['values'][-1] = hashedPassword
 
     db = Database()
@@ -136,7 +138,7 @@ def updateProfile():
     elif (response['status'] == 500):
         return jsonify({'title': "Internal server error", 'message': 'Please try again.'}), 500
 
-@app.route('/updateGoals', methods=['POST'])
+@app.route('/update/updateGoals', methods=['POST'])
 def updateGoals():
     data = request.get_json()
 
@@ -153,6 +155,9 @@ def updateGoals():
         return jsonify({'message': 'ok'}), 200
     elif (response['status'] == 500):
         return jsonify({'title': "Internal server error", 'message': 'Please try again.'}), 500
+    
+
+# transaction routes ---------------------------------------------------------------------------------------------------
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=3001, debug=False)
