@@ -281,38 +281,66 @@ class SettingsState extends State<Settings> {
     passwordController.text = storedPassword!;
 
     // goal related loading
-    final budgetUri = Uri.parse('$backendUri/getBudget');
-    final budgetResponse = await http.post(budgetUri,
-      headers: {'Content-Type': 'application/json'},
-      body: json.encode({
-        'user_id': userId
-      })
-    );
 
-    final budgetData = json.decode(budgetResponse.body);
+    // check if the data is present in the storage, if not then fetch
+    final storedMonthlyBudget = await storage.get('monthly_budget');
+    if (storedMonthlyBudget == null) {
+      final budgetUri = Uri.parse('$backendUri/getBudget');
+      final budgetResponse = await http.post(budgetUri,
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({
+          'user_id': userId
+        })
+      );
 
-    setState(() {
-      monthlyBudget = double.parse(budgetData['monthly_budget']);
-    });
+      final budgetData = json.decode(budgetResponse.body);
 
-    final categoriesUri = Uri.parse('$backendUri/getCategories');
-    final categoriesResponse = await http.post(categoriesUri,
-      headers: {'Content-Type': 'application/json'},
-      body: json.encode({
-        'user_id': userId
-      })
-    );
+      await storage.set('monthly_budget', budgetData['monthly_budget']);
 
-    final categoriesData = json.decode(categoriesResponse.body)['categories'];
+      setState(() {
+        monthlyBudget = double.parse(budgetData['monthly_budget']);
+      });
+    }
+    else {
+      setState(() {
+        monthlyBudget = double.parse(storedMonthlyBudget);
+      });
+    }
 
-    setState(() {
-      for (int i = 0; i < categoriesData.length; i++) {
-        categories.add(categoriesData[i][0]);
-        categoriesCopy.add(categoriesData[i][0]);
-        allottedBudget.add(double.parse(categoriesData[i][1]));
-        budgetCopy.add(double.parse(categoriesData[i][1]));
-      }
-    });
+    final storedCategories = await storage.get('categories');
+    final storedBudget = await storage.get('allotted_budget');
+    if (storedCategories == null || storedBudget == null) {
+      final categoriesUri = Uri.parse('$backendUri/getCategories');
+      final categoriesResponse = await http.post(categoriesUri,
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({
+          'user_id': userId
+        })
+      );
+
+      final categoriesData = json.decode(categoriesResponse.body)['categories'];
+
+      setState(() {
+        for (int i = 0; i < categoriesData.length; i++) {
+          categories.add(categoriesData[i][0]);
+          categoriesCopy.add(categoriesData[i][0]);
+          allottedBudget.add(double.parse(categoriesData[i][1]));
+          budgetCopy.add(double.parse(categoriesData[i][1]));
+        }
+      });
+
+      await storage.set('categories', json.encode(categories));
+      await storage.set('allotted_budget', json.encode(allottedBudget));
+    } else {
+      setState(() {
+        final decodedCategories = json.decode(storedCategories);
+        final decodedBudget = json.decode(storedBudget);
+        categories = decodedCategories;
+        categoriesCopy = decodedCategories;
+        allottedBudget = decodedBudget;
+        budgetCopy = decodedBudget;
+      });
+    }
   }
 
   @override
