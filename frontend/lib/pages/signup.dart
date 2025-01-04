@@ -5,6 +5,7 @@ import 'package:frontend/storage.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:frontend/components/warning_dialogue.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class Signup extends StatefulWidget {
   const Signup({super.key});
@@ -15,6 +16,7 @@ class Signup extends StatefulWidget {
 
 class SignupState extends State<Signup> {
   String name = '', mobile = '', password = '', gender = 'Male', age = '';
+  String backendUri = "";
 
   List<DropdownMenuItem<String>> genders = <DropdownMenuItem<String>>[
     DropdownMenuItem<String>(
@@ -41,10 +43,12 @@ class SignupState extends State<Signup> {
       age = '';
       gender = 'M';
     });
+
+    backendUri = dotenv.env['BACKEND_URI']!;
   }
 
   Future<void> registerUser() async {
-    final signupURI = Uri.parse('http://192.168.101.3:3001/auth/register');
+    final signupURI = Uri.parse('$backendUri/auth/register');
     
     try {
       final storage = Storage();

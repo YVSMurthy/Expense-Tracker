@@ -6,6 +6,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'dart:core';
 import 'package:frontend/components/warning_dialogue.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class Login extends StatefulWidget {
   const Login({super.key});
@@ -16,11 +17,12 @@ class Login extends StatefulWidget {
 
 class LoginState extends State<Login> {
   String mobile = "", password = "";
+  String backendUri = "";
 
   @override
   void initState() {
     super.initState();
-
+    backendUri = dotenv.env['BACKEND_URI']!;
   }
 
   bool checkMobile() {
@@ -37,7 +39,7 @@ class LoginState extends State<Login> {
     }
     
     try {
-      final loginURI = Uri.parse('http://192.168.101.3:3001/auth/login');
+      final loginURI = Uri.parse('$backendUri/auth/login');
       final response = await http.post(loginURI,
         headers: {'Content-Type': 'application/json'},
         body: json.encode({'mobile': mobile, 'password': password})

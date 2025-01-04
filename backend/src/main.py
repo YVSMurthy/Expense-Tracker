@@ -26,7 +26,7 @@ def login():
     elif (response['status'] == 401):
         return jsonify({'title': 'Unauthorized access', 'message': 'Please verify your credentials and try again'}), 401
     else:
-        print(response['message'])
+        print(response['error'])
         return jsonify({'title': "Internal server error", 'message': 'Please try again.'}), 500
 
 @app.route('/auth/register', methods=['POST'])
@@ -48,6 +48,7 @@ def register():
     if (response['status'] == 200):
         return jsonify({'message': 'ok', 'user_id': response['user_id']}), 200
     elif (response['status'] == 500):
+        print(response['error'])
         return jsonify({'title': "Internal server error", 'message': 'Please try again.'}), 500
 
 
@@ -65,6 +66,7 @@ def getBudget():
     if (response['status'] == 200):
         return jsonify({'message': 'ok', 'monthly_budget': response['monthly_budget']}), 200
     elif (response['status'] == 500):
+        print(response['error'])
         return jsonify({'title': "Internal server error", 'message': 'Please try again.'}), 500
     
 @app.route('/update/getCategories', methods=['POST'])
@@ -80,6 +82,7 @@ def getCategories():
     if (response['status'] == 200):
         return jsonify({'message': 'ok', 'categories': response['categories']}), 200
     elif (response['status'] == 500):
+        print(response['error'])
         return jsonify({'title': "Internal server error", 'message': 'Please try again.'}), 500
 
 @app.route('/update/addCategory', methods=['POST'])
@@ -98,6 +101,7 @@ def addCategory():
     if (response['status'] == 200):
         return jsonify({'message': 'ok'}), 200
     elif (response['status'] == 500):
+        print(response['error'])
         return jsonify({'title': "Internal server error", 'message': 'Please try again.'}), 500
 
 @app.route('/update/deleteCategory', methods=['POST'])
@@ -115,6 +119,7 @@ def deleteCategory():
     if (response['status'] == 200):
         return jsonify({'message': 'ok'}), 200
     elif (response['status'] == 500):
+        print(response['error'])
         return jsonify({'title': "Internal server error", 'message': 'Please try again.'}), 500
 
 @app.route('/update/updateProfile', methods=['POST'])
@@ -136,6 +141,7 @@ def updateProfile():
     if (response['status'] == 200):
         return jsonify({'message': 'ok'}), 200
     elif (response['status'] == 500):
+        print(response['error'])
         return jsonify({'title': "Internal server error", 'message': 'Please try again.'}), 500
 
 @app.route('/update/updateGoals', methods=['POST'])
@@ -154,10 +160,72 @@ def updateGoals():
     if (response['status'] == 200):
         return jsonify({'message': 'ok'}), 200
     elif (response['status'] == 500):
+        print(response['error'])
         return jsonify({'title': "Internal server error", 'message': 'Please try again.'}), 500
     
 
 # transaction routes ---------------------------------------------------------------------------------------------------
+@app.route('/transaction/add', methods=['POST'])
+def addTransaction():
+    data = request.get_json()
+
+    userId = data.get('user_id')
+    title = data.get('title')
+    transDesc = data.get('trans_desc')
+    transType = data.get('type')
+    transDate = data.get('trans_date')
+    amount = data.get('amount')
+    friendName = data.get('friend')
+    split = data.get('split')
+
+    db = Database()
+    response = db.addTransaction(userId, title, transDesc, transType, transDate, amount, friendName, split)
+    db.close()
+
+    if (response['status'] == 200):
+        return jsonify({'message': 'ok'}), 200
+    elif (response['status'] == 500):
+        print(response['error'])
+        return jsonify({'title': "Internal server error", 'message': 'Please try again.'}), 500
+    
+@app.route('/transaction/updateDue', methods=['POST'])
+def updateDue():
+    data = request.get_json()
+
+    userId = data.get('user_id')
+    transDate = data.get('trans_date')
+    amount = data.get('amount')
+    friendName = data.get('friend')
+
+    db = Database()
+    response = db.updateDue(userId, transDate, amount, friendName)
+    db.close()
+
+    print(response)
+
+    if (response['status'] == 200):
+        return jsonify({'message': 'ok'}), 200
+    elif (response['status'] == 500):
+        print(response['error'])
+        return jsonify({'title': "Internal server error", 'message': 'Please try again.'}), 500
+
+@app.route('/transactions/get', methods=['POST'])
+def getTransactions():
+    data = request.get_json()
+
+    userId = data.get('user_id')
+    monthsBack = data.get('months_back')
+
+    db = Database()
+    response = db.getTransaction(userId, monthsBack)
+    db.close()
+
+    if (response['status'] == 200):
+        return jsonify({'message': 'ok', 'transactions': response['transactions']}), 200
+    elif (response['status'] == 500):
+        print(response['error'])
+        return jsonify({'title': "Internal server error", 'message': 'Please try again.'}), 500
+
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=3001, debug=False)

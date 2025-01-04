@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:frontend/pages/login.dart';
 import 'package:frontend/storage.dart';
 import 'package:http/http.dart' as http;
@@ -16,7 +17,7 @@ class Settings extends StatefulWidget {
 
 class SettingsState extends State<Settings> {
   final storage = Storage();
-  final backendUri = "http://192.168.101.3:3001/update";
+  String backendUri = "";
 
   String userId = "", name = " ", mobile = " ", password = " ";
   TextEditingController nameController = TextEditingController();
@@ -83,7 +84,7 @@ class SettingsState extends State<Settings> {
     if (fields.isNotEmpty) {
       try {
         // updating in database
-        final uri = Uri.parse("$backendUri/updateProfile");
+        final uri = Uri.parse("$backendUri/update/updateProfile");
         final response = await http.post(uri,
           headers: {'Content-Type': 'application/json'},
           body: json.encode({
@@ -123,7 +124,7 @@ class SettingsState extends State<Settings> {
     if (result != null) {
       if (mounted) {
         try {
-          final uri = Uri.parse('$backendUri/addCategory');
+          final uri = Uri.parse('$backendUri/update/addCategory');
           final response = await http.post(uri,
             headers: {'Content-Type': 'application/json'},
             body: json.encode({
@@ -159,7 +160,7 @@ class SettingsState extends State<Settings> {
 
   void deleteCategory(int index) async {
     try {
-      final uri = Uri.parse('$backendUri/deleteCategory');
+      final uri = Uri.parse('$backendUri/update/deleteCategory');
       final response = await http.post(uri,
         headers: {'Content-Type': 'application/json'},
         body: json.encode({
@@ -231,7 +232,7 @@ class SettingsState extends State<Settings> {
       }
 
       try {
-        final updateGoalUri = Uri.parse("$backendUri/updateGoals");
+        final updateGoalUri = Uri.parse("$backendUri/update/updateGoals");
         final response = await http.post(updateGoalUri,
           headers: {'Content-Type': 'application.json'},
           body: json.encode({
@@ -263,6 +264,8 @@ class SettingsState extends State<Settings> {
   }
 
   _loadDetails() async {
+    backendUri = dotenv.env['BACKEND_URI']!;
+
     // loading profile details
     final storedName = await storage.get('name');
     final storedMobile = await storage.get('mobile');
@@ -285,7 +288,7 @@ class SettingsState extends State<Settings> {
     // check if the data is present in the storage, if not then fetch
     final storedMonthlyBudget = await storage.get('monthly_budget');
     if (storedMonthlyBudget == null) {
-      final budgetUri = Uri.parse('$backendUri/getBudget');
+      final budgetUri = Uri.parse('$backendUri/update/getBudget');
       final budgetResponse = await http.post(budgetUri,
         headers: {'Content-Type': 'application/json'},
         body: json.encode({
@@ -310,7 +313,7 @@ class SettingsState extends State<Settings> {
     final storedCategories = await storage.get('categories');
     final storedBudget = await storage.get('allotted_budget');
     if (storedCategories == null || storedBudget == null) {
-      final categoriesUri = Uri.parse('$backendUri/getCategories');
+      final categoriesUri = Uri.parse('$backendUri/update/getCategories');
       final categoriesResponse = await http.post(categoriesUri,
         headers: {'Content-Type': 'application/json'},
         body: json.encode({
@@ -335,10 +338,10 @@ class SettingsState extends State<Settings> {
       setState(() {
         final decodedCategories = json.decode(storedCategories);
         final decodedBudget = json.decode(storedBudget);
-        categories = decodedCategories;
-        categoriesCopy = decodedCategories;
-        allottedBudget = decodedBudget;
-        budgetCopy = decodedBudget;
+        categories = List<String>.from(decodedCategories);
+        categoriesCopy = List<String>.from(categories);
+        allottedBudget = List<double>.from(decodedBudget);
+        budgetCopy = List<double>.from(allottedBudget);
       });
     }
   }

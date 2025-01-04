@@ -3,6 +3,7 @@ import os
 from dotenv import load_dotenv # type: ignore for warning
 import bcrypt # type: ignore for warning
 import uuid
+from datetime import datetime
 
 # loading environment variables
 load_dotenv()
@@ -40,8 +41,8 @@ class Database:
             self.connection.commit()
 
             return {'status': 200, 'user_id': uniqueId}
-        except:
-            return {'status': 500}
+        except Exception as e:
+            return {'status': 500, 'error': e}
 
 
 
@@ -72,8 +73,8 @@ class Database:
             budget = self.cursor.fetchone()
 
             return {'status': 200, 'monthly_budget': budget[0]}
-        except:
-            return {'status': 500}
+        except Exception as e:
+            return {'status': 500, 'error': e}
         
     # get the monthly budget of a particular userId
     def getCategories(self, userId):
@@ -84,8 +85,8 @@ class Database:
             categories = self.cursor.fetchall()
 
             return {'status': 200, 'categories': categories}
-        except:
-            return {'status': 500}
+        except Exception as e:
+            return {'status': 500, 'error': e}
         
     # adding new category
     def addCategory(self, userId, catName, allotedAmount, monthlyBudget):
@@ -100,8 +101,8 @@ class Database:
             self.connection.commit()
 
             return {'status': 200}
-        except:
-            return {'status': 500}
+        except Exception as e:
+            return {'status': 500, 'error': e}
     
     # adding new category
     def deleteCategory(self, userId, catName, monthlyBudget):
@@ -116,8 +117,8 @@ class Database:
             self.connection.commit()
 
             return {'status': 200}
-        except:
-            return {'status': 500}
+        except Exception as e:
+            return {'status': 500, 'error': e}
     
     # updating the specifics of user profile
     def updateUserProfile(self, userId, updates):
@@ -128,8 +129,8 @@ class Database:
             self.connection.commit()
 
             return {'status': 200}
-        except:
-            return {'status': 500}
+        except Exception as e:
+            return {'status': 500, 'error': e}
     
     # updating the category names and the allotted budget
     def updateCategories(self, userId, updatedBudgets, updatedCategories, monthlyBudget):
@@ -153,5 +154,74 @@ class Database:
 
             return {'status': 200}
                 
-        except:
-            return {'status': 500}
+        except Exception as e:
+            return {'status': 500, 'error': e}
+        
+    # adding transaction
+    def addTransaction(self, userId, title, transDesc, transType, transDate, amount, friendName, split):
+        try:
+            transId = str(uuid.uuid4())
+            transTime = datetime.now().time()
+
+            query = "insert into transactions values (%s, %s, %s, %s, %s, %s, %s, %s, %s)"
+            self.cursor.execute(query, (transId, userId, title, transDesc, transType, transDate, amount, transTime, split))
+
+            if (split):
+                query = "insert into dues values (%s, %s, %s, %s)"
+                self.cursor.execute(query, (transId, userId, friendName, amount))
+            
+            self.connection.commit()
+
+            return {'status': 200}
+        except Exception as e:
+            return {'status': 500, 'error': e}
+    
+    # function to get the transactions 
+    def getTransactions(self, userId, monthsBack):
+        try:
+            today = datetime.now()
+            year = today.year()
+            month = today.month()
+            if (monthsBack >= month):
+                month = 12 - (monthsBack - month)
+                year = year - 1
+            else:
+                month = month - monthsBack
+            
+            initialDate = datetime(year, month, 1).date()
+
+            query = "select trans_id, title, type, trans_date, amount from transactions where user_id = %s and trans_date >= %s order by trans_date desc, trans_time desc"
+            self.cursor.execute(query, (userId, initialDate))
+
+            transactions = self.cursor.fetchall()
+
+            return {'status': 200, 'transactions': transactions}
+        except Exception as e:
+            return {'status': 500, 'error': e}
+    
+    # updating the dues
+    def updateDue(self, userId, transDate, amount, friendName):
+        try:
+            query = "select name, sum(amount) from dues where user_id=%s and name=%s group by name"
+            self.cursor.execute(query, (userId, friendName))
+
+            due = self.cursor.fetchone()
+
+            transId = str(uuid.uuid4())
+            transTime = datetime.now().time()
+
+            query = "insert into transactions values (%s, %s, %s, %s, %s, %s, %s, %s, %s)"
+            self.cursor.execute(query, (transId, userId, "Due paid", "Due paid", 'paid', transDate, amount, transTime, 0))
+
+            if (due[1] == amount):
+                query = "delete from dues where user_id=%s and name=%s"
+                self.cursor.execute(query, (userId, friendName))
+            else:
+                query = "insert into dues (trans_id, user_id, name, amount) values (%s, %s, %s, %s)"
+                self.cursor.execute(query, (transId, userId, friendName, -amount))
+            
+            self.connection.commit()
+
+            return {'status': 200}
+        except Exception as e:
+            return {'status': 500, 'error': e}

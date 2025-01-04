@@ -38,6 +38,8 @@ dependencies:
   http: ^1.2.2
   encrypt: ^5.0.0
   flutter_dotenv: ^5.0.2
+  intl: ^0.17.0
+
 
 dev_dependencies:
   flutter_test:
