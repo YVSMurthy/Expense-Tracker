@@ -13,7 +13,7 @@ class Dashboard extends StatefulWidget {
 }
 
 class DashboardState extends State<Dashboard> {
-  int currIndex = 0;
+  int currIndex = 2;
 
   List<Widget> pages = [
     Dues(),

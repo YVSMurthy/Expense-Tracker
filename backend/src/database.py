@@ -225,3 +225,15 @@ class Database:
             return {'status': 200}
         except Exception as e:
             return {'status': 500, 'error': e}
+        
+    # getting the list of dues
+    def getDues(self, userId):
+        try:
+            query = "select name, sum(amount) from dues where user_id = %s group by name"
+            self.cursor.execute(query, (userId, ))
+
+            dues = self.cursor.fetchall()
+
+            return {'status': 200, 'dues': dues}
+        except Exception as e:
+            return {'status': 500, 'error': e}

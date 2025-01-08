@@ -225,6 +225,22 @@ def getTransactions():
     elif (response['status'] == 500):
         print(response['error'])
         return jsonify({'title': "Internal server error", 'message': 'Please try again.'}), 500
+    
+@app.route('/transactions/getDues', methods=['POST'])
+def getDues():
+    data = request.get_json()
+
+    userId = data.get('user_id')
+
+    db = Database()
+    response = db.getDues(userId)
+    db.close()
+
+    if (response['status'] == 200):
+        return jsonify({'message': 'ok', 'dues': response['dues']}), 200
+    elif (response['status'] == 500):
+        print(response['error'])
+        return jsonify({'title': "Internal server error", 'message': 'Please try again.'}), 500
 
 
 if __name__ == '__main__':
