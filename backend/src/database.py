@@ -237,3 +237,14 @@ class Database:
             return {'status': 200, 'dues': dues}
         except Exception as e:
             return {'status': 500, 'error': e}
+        
+    def getDueDetails(self, userId, friendName):
+        try:
+            query = "select trans_id, title, trans_desc, trans_date, trans_time, amount from transactions where trans_id in (select trans_id from dues where user_id = %s and name = %s) order by trans_date desc, trans_time desc"
+            self.cursor.execute(query, (userId, friendName))
+
+            dueDetails = self.cursor.fetchall()
+
+            return {'status': 200, 'due_details': dueDetails}
+        except Exception as e:
+            return {'status': 500, 'error': e}

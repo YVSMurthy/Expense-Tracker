@@ -221,10 +221,36 @@ def getTransactions():
     db.close()
 
     if (response['status'] == 200):
-        return jsonify({'message': 'ok', 'transactions': response['transactions']}), 200
+        transactions = {}
+
+        for transaction in response['transactions']:
+            month = transaction[3].strftime("%B-, %Y")
+
+            if month in transactions:
+                transactions[month].append(transaction)
+            else:
+                transactions[month] = [transaction]
+
+        return jsonify({'message': 'ok', 'transactions': transactions}), 200
     elif (response['status'] == 500):
         print(response['error'])
         return jsonify({'title': "Internal server error", 'message': 'Please try again.'}), 500
+    
+@app.route('/transactions/getTransactionDetails')
+def getTransactionDetails():
+    data = request.get_json()
+
+    transId = data.get('trans_id')
+
+    db = Database()
+    response = db.getTransactionDetails(transId)
+    db.close()
+
+    if (response['status'] == 200):
+        return jsonify({'message': 'ok', 'transaction_details': response['transaction_details']}), 200
+    elif (response['status'] == 500):
+        print(response['error'])
+        return jsonify({'title': 'Internal Server Error', 'message': 'Please try again.'}), 500
     
 @app.route('/transactions/getDues', methods=['POST'])
 def getDues():
@@ -241,6 +267,24 @@ def getDues():
     elif (response['status'] == 500):
         print(response['error'])
         return jsonify({'title': "Internal server error", 'message': 'Please try again.'}), 500
+
+@app.route('/transactions/getDueDetails', methods=['POST'])
+def getDueDetails():
+    data = request.get_json()
+
+    userId = data.get('user_id')
+    friendName = data.get('name')
+
+    db = Database()
+    response = db.getDueDetails(userId, friendName)
+    db.close()
+
+    if (response['status'] == 200):
+        return jsonify({'message': 'ok', 'due_details': response['due_details']}), 200
+    elif (response['status'] == 500):
+        print(response['error'])
+        return jsonify({'title': "Internal server error", 'message': 'Please try again.'}), 500
+    
 
 
 if __name__ == '__main__':
