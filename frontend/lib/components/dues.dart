@@ -18,6 +18,7 @@ class DuesState extends State<Dues> {
   List<String> people = [];
   List<double> due = [];
   double totalDue = 0;
+  bool loading = true;
   String backendUri = "", userId = "";
 
   void getDueDetails(int index) {
@@ -41,33 +42,46 @@ class DuesState extends State<Dues> {
       userId = storedUserId!;
     });
 
-    final uri = Uri.parse("$backendUri/transactions/getDues");
-    final response = await http.post(uri,
-      headers: {'Content-Type': 'application/json'},
-      body: json.encode({
-        'user_id': userId
-      })
-    );
+    try {
+      final uri = Uri.parse("$backendUri/transactions/getDues");
+      final response = await http.post(uri,
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({
+          'user_id': userId
+        })
+      );
 
-    final data = await json.decode(response.body);
+      final data = await json.decode(response.body);
 
-    if (response.statusCode == 200) {
-      final dueData = data['dues'];
-      
-      setState(() {
-        for (int i = 0; i < dueData.length; i++) {
-          if (double.parse(dueData[i][1]) != 0) {
-            people.add(dueData[i][0]);
-            due.add(double.parse(dueData[i][1]));
+      if (response.statusCode == 200) {
+        final dueData = data['dues'];
+        
+        setState(() {
+          for (int i = 0; i < dueData.length; i++) {
+            if (double.parse(dueData[i][1]) != 0) {
+              people.add(dueData[i][0]);
+              double currDue = double.parse(dueData[i][1]);
+              due.add(currDue);
+              totalDue += currDue;
+
+            }
           }
-        }
-      });
+        });
 
-    } else {
+      } else {
+        if (mounted) {
+          showWarningDialog(context, data['title'], data['message']);
+        }
+      }
+    } catch(error) {
       if (mounted) {
-        showWarningDialog(context, data['title'], data['message']);
+        showWarningDialog(context, "Some Error Occured", error.toString());
       }
     }
+
+    setState(() {
+      loading = false;
+    });
   }
 
   @override
@@ -77,103 +91,123 @@ class DuesState extends State<Dues> {
 
     return Scaffold(
       body: SingleChildScrollView(
-        child: Column(
+        child: (!loading) ? Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
+            (totalDue != 0) ? Column(
               children: [
-                SizedBox(width: 10,),
-                Text(
-                  "Dues",
-                  style: TextStyle(
-                    fontSize: 30,
-                    fontWeight: FontWeight.bold
+                Row(
+                  children: [
+                    SizedBox(width: 10,),
+                    Text(
+                      "Dues",
+                      style: TextStyle(
+                        fontSize: 30,
+                        fontWeight: FontWeight.bold
+                      ),
+                    ),
+                  ],
+                ),
+
+                SizedBox(height: 20,),
+
+                Container(
+                  width: w,
+                  padding: EdgeInsets.symmetric(vertical: 10, horizontal: 20),
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade300
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        "Name",
+                        style: TextStyle(
+                          fontSize: 20
+                        ),
+                      ),
+                      Text(
+                        "Amount",
+                        style: TextStyle(
+                          fontSize: 20
+                        ),
+                      )
+                    ],
+                  )
+                ),
+
+                Container(
+                  height: people.length*h*0.09 + 10,
+                  constraints: BoxConstraints(maxHeight: h*0.65),
+                  decoration: BoxDecoration(
+                    color: const Color.fromARGB(255, 241, 241, 241)
+                  ),
+                  child: ListView.builder(
+                    itemCount: people.length,
+                    itemBuilder: (BuildContext context, int index) {
+                      return Container(
+                        padding: const EdgeInsets.fromLTRB(20, 0, 35, 10),
+                        child: Column (
+                          children: [
+                            Container(
+                              decoration: BoxDecoration(
+                                color: const Color.fromARGB(255, 241, 241, 241)
+                              ),
+                              child: GestureDetector(
+                                onTap: () {
+                                  getDueDetails(index);
+                                },
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Expanded(
+                                      child: Text(
+                                        people[index],
+                                        style: const TextStyle(
+                                          fontSize: 20,
+                                        ),
+                                      ),
+                                    ),
+                                    Text(
+                                      due[index].toString(),
+                                      style: const TextStyle(
+                                        fontSize: 20,
+                                        color: Color.fromARGB(255, 230, 53, 40),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+
+                            SizedBox(height: 25,)
+                          ],
+                        )
+                      );
+                    },
                   ),
                 ),
-              ],
-            ),
-
-            SizedBox(height: 20,),
-
-            Container(
+              ]
+            ) : SizedBox(
               width: w,
-              padding: EdgeInsets.symmetric(vertical: 10, horizontal: 20),
-              decoration: BoxDecoration(
-                color: Colors.grey.shade300
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    "Name",
-                    style: TextStyle(
-                      fontSize: 20
-                    ),
-                  ),
-                  Text(
-                    "Amount",
-                    style: TextStyle(
-                      fontSize: 20
-                    ),
-                  )
-                ],
-              )
-            ),
-
-            Container(
-              height: people.length*h*0.09 + 10,
-              constraints: BoxConstraints(maxHeight: h*0.65),
-              decoration: BoxDecoration(
-                color: const Color.fromARGB(255, 241, 241, 241)
-              ),
-              child: ListView.builder(
-                itemCount: people.length,
-                itemBuilder: (BuildContext context, int index) {
-                  return Container(
-                    padding: const EdgeInsets.fromLTRB(20, 0, 35, 10),
-                    child: Column (
-                      children: [
-                        Container(
-                          decoration: BoxDecoration(
-                            color: const Color.fromARGB(255, 241, 241, 241)
-                          ),
-                          child: GestureDetector(
-                            onTap: () {
-                              getDueDetails(index);
-                            },
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Expanded(
-                                  child: Text(
-                                    people[index],
-                                    style: const TextStyle(
-                                      fontSize: 20,
-                                    ),
-                                  ),
-                                ),
-                                Text(
-                                  due[index].toString(),
-                                  style: const TextStyle(
-                                    fontSize: 20,
-                                    color: Color.fromARGB(255, 230, 53, 40),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-
-                        SizedBox(height: 25,)
-                      ],
-                    )
-                  );
-                },
+              height: h*0.8,
+              child: Center(
+              child: Text(
+                "No Due",
+                style: TextStyle(
+                  fontSize: 36,
+                ),
               ),
             ),
-            
+            ),
           ]
-        ),
+        ) : SizedBox(
+          width: w,
+          height: h*0.75,
+          child: Center(
+            child: CircularProgressIndicator(),
+          ),
+        )
       )
     );
   }

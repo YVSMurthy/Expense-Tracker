@@ -17,6 +17,7 @@ class Settings extends StatefulWidget {
 
 class SettingsState extends State<Settings> {
   final storage = Storage();
+  bool loading = true;
   String backendUri = "";
 
   String userId = "", name = " ", mobile = " ", password = " ";
@@ -344,6 +345,10 @@ class SettingsState extends State<Settings> {
         budgetCopy = List<double>.from(allottedBudget);
       });
     }
+
+    setState(() {
+      loading = false;
+    });
   }
 
   @override
@@ -359,7 +364,7 @@ class SettingsState extends State<Settings> {
 
     return Scaffold(
       body: SingleChildScrollView(
-        child: Column(
+        child: (!loading) ? Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Profile part
@@ -801,6 +806,12 @@ class SettingsState extends State<Settings> {
 
             SizedBox(height: 60,),
           ],
+        ) : SizedBox(
+          width: w,
+          height: h*0.75,
+          child: Center(
+            child: CircularProgressIndicator(),
+          ),
         )
       )
     );

@@ -3,7 +3,7 @@ import os
 from dotenv import load_dotenv # type: ignore for warning
 import bcrypt # type: ignore for warning
 import uuid
-from datetime import datetime
+from datetime import datetime, timedelta
 
 # loading environment variables
 load_dotenv()
@@ -243,7 +243,20 @@ class Database:
             query = "select trans_id, title, trans_desc, trans_date, trans_time, amount from transactions where trans_id in (select trans_id from dues where user_id = %s and name = %s) order by trans_date desc, trans_time desc"
             self.cursor.execute(query, (userId, friendName))
 
-            dueDetails = self.cursor.fetchall()
+            dueDetailsTuple = self.cursor.fetchall()
+
+            dueDetails = []
+            for due in dueDetailsTuple:
+                due = list(due)  # Convert tuple to list
+                for index, value in enumerate(due):
+                    if isinstance(value, timedelta):
+                        # Convert timedelta to hours:minutes:seconds format
+                        total_seconds = value.total_seconds()
+                        hours = int(total_seconds // 3600)
+                        minutes = int((total_seconds % 3600) // 60)
+                        seconds = int((total_seconds % 3600) % 60)
+                        due[index] = f"{hours:02}:{minutes:02}:{seconds:02}"
+                dueDetails.append(due)
 
             return {'status': 200, 'due_details': dueDetails}
         except Exception as e:

@@ -9,7 +9,11 @@ def hashText(password):
     salt = bcrypt.gensalt()
     return bcrypt.hashpw(password.encode('utf-8'), salt).decode()
 
+
+# ----------------------------------------------------------------------------------------------------------------------
 # authentication routes ------------------------------------------------------------------------------------------------
+
+
 @app.route('/auth/login', methods=['POST'])
 def login():
     data = request.get_json()
@@ -52,7 +56,10 @@ def register():
         return jsonify({'title': "Internal server error", 'message': 'Please try again.'}), 500
 
 
+# ----------------------------------------------------------------------------------------------------------------------
 # update routes --------------------------------------------------------------------------------------------------------
+
+
 @app.route('/update/getBudget', methods=['POST'])
 def getBudget():
     data = request.get_json()
@@ -164,7 +171,10 @@ def updateGoals():
         return jsonify({'title': "Internal server error", 'message': 'Please try again.'}), 500
     
 
+# ----------------------------------------------------------------------------------------------------------------------
 # transaction routes ---------------------------------------------------------------------------------------------------
+
+
 @app.route('/transaction/add', methods=['POST'])
 def addTransaction():
     data = request.get_json()
