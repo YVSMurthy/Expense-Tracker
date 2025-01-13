@@ -180,8 +180,8 @@ class Database:
     def getTransactions(self, userId, monthsBack):
         try:
             today = datetime.now()
-            year = today.year()
-            month = today.month()
+            year = today.year
+            month = today.month
             if (monthsBack >= month):
                 month = 12 - (monthsBack - month)
                 year = year - 1
@@ -197,6 +197,7 @@ class Database:
 
             return {'status': 200, 'transactions': transactions}
         except Exception as e:
+            print(e)
             return {'status': 500, 'error': e}
     
     # updating the dues

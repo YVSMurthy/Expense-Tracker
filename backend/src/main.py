@@ -1,6 +1,7 @@
 from flask import Flask, request, jsonify # type: ignore for warning
 from database import Database
 import bcrypt # type: ignore for warning
+from datetime import date
 
 app = Flask(__name__)
 
@@ -219,22 +220,22 @@ def updateDue():
         print(response['error'])
         return jsonify({'title': "Internal server error", 'message': 'Please try again.'}), 500
 
-@app.route('/transactions/get', methods=['POST'])
+@app.route('/transactions/getTransactions', methods=['POST'])
 def getTransactions():
     data = request.get_json()
 
     userId = data.get('user_id')
-    monthsBack = data.get('months_back')
+    monthsBack = data.get('months_back', 0)
 
     db = Database()
-    response = db.getTransaction(userId, monthsBack)
+    response = db.getTransactions(userId, monthsBack)
     db.close()
 
     if (response['status'] == 200):
         transactions = {}
 
         for transaction in response['transactions']:
-            month = transaction[3].strftime("%B-, %Y")
+            month = transaction[3].strftime("%B, %Y")
 
             if month in transactions:
                 transactions[month].append(transaction)
