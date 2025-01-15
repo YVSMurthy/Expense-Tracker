@@ -212,8 +212,6 @@ def updateDue():
     response = db.updateDue(userId, transDate, amount, friendName)
     db.close()
 
-    print(response)
-
     if (response['status'] == 200):
         return jsonify({'message': 'ok'}), 200
     elif (response['status'] == 500):
@@ -238,9 +236,17 @@ def getTransactions():
             month = transaction[3].strftime("%B, %Y")
 
             if month in transactions:
-                transactions[month].append(transaction)
+                transactions[month]['transactions'].append(transaction)
+                if (transaction[2] != 'paid' and transaction[2] != "inc"):
+                    transactions[month]['total'] -= transaction[4]
+                else:
+                    transactions[month]['total'] += transaction[4]
             else:
-                transactions[month] = [transaction]
+                if (transaction[2] != 'paid' and transaction[2] != "inc"):
+                    total = -transaction[4]
+                else:
+                    total = transaction[4]
+                transactions[month] = {'total': total, 'transactions': [transaction]}
 
         return jsonify({'message': 'ok', 'transactions': transactions}), 200
     elif (response['status'] == 500):

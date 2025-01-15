@@ -364,6 +364,7 @@ class SettingsState extends State<Settings> {
 
     return Scaffold(
       body: SingleChildScrollView(
+        padding: EdgeInsets.symmetric(vertical: 0, horizontal: 20),
         child: (!loading) ? Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -685,95 +686,112 @@ class SettingsState extends State<Settings> {
                   ]
                 ),
 
-                Container(
-                  constraints: BoxConstraints(maxHeight: h*0.4, minHeight: 20),
-                  child: ListView.builder(
-                    itemCount: categories.length,
-                    itemBuilder: (BuildContext context, int index) {
+                SizedBox(
+                  child: Column(
+                    children: categories.asMap().entries.map((entry) {
+                      final int index = entry.key;
+                      final String category = entry.value;
+
                       return ListTile(
-                        leading: !goalIsEditable ? GestureDetector(
-                          onTap: () {
-                            !goalIsEditable ? deleteCategory(index) : null;
-                          },
-                          child: Icon(Icons.delete, color: Colors.red,)
-                        ) : null,
+                        leading: !goalIsEditable
+                            ? GestureDetector(
+                                onTap: () {
+                                  if (!goalIsEditable) {
+                                    deleteCategory(index);
+                                  }
+                                },
+                                child: const Icon(
+                                  Icons.delete,
+                                  color: Colors.red,
+                                ),
+                              )
+                            : null,
                         trailing: Container(
-                          child: goalIsEditable ? SizedBox(
-                            width: w*0.25,
-                            child: TextField(
-                              decoration: InputDecoration(
-                                hintText: allottedBudget[index].toString(),
-                                hintStyle: TextStyle(
-                                  color: Colors.black,
+                          child: goalIsEditable
+                              ? SizedBox(
+                                  width: w * 0.25,
+                                  child: TextField(
+                                    decoration: InputDecoration(
+                                      hintText: allottedBudget[index].toString(),
+                                      hintStyle: const TextStyle(color: Colors.black),
+                                      filled: true,
+                                      fillColor: Colors.white,
+                                      enabledBorder: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(10.0), // Rounded corners
+                                        borderSide: const BorderSide(color: Colors.white),
+                                      ),
+                                      focusedBorder: OutlineInputBorder(
+                                        borderSide: const BorderSide(
+                                            color: Color.fromARGB(0, 0, 0, 0)),
+                                      ),
+                                      border: const OutlineInputBorder(),
+                                    ),
+                                    onSubmitted: (value) {
+                                      setState(() {
+                                        allottedBudget[index] = value.isEmpty
+                                            ? allottedBudget[index]
+                                            : double.parse(value);
+                                        if (allottedBudget[index] != budgetCopy[index]) {
+                                          monthlyBudget = monthlyBudget -
+                                              allottedBudget[index] +
+                                              budgetCopy[index];
+                                        }
+                                      });
+                                    },
+                                  ),
+                                )
+                              : Text(
+                                  allottedBudget[index].toString(),
+                                  style: const TextStyle(
+                                    fontSize: 20,
+                                    fontFamily: 'Times',
+                                    fontWeight: FontWeight.w500,
+                                  ),
                                 ),
-                                filled: true,
-                                fillColor: Colors.white,
-                                enabledBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(10.0), // Adds rounded corners
-                                  borderSide: BorderSide(color: Colors.white),
-                                ),
-                                focusedBorder: OutlineInputBorder(
-                                  borderSide: BorderSide(color: const Color.fromARGB(0, 0, 0, 0)),
-                                ),
-                                border: OutlineInputBorder(),
-                              ),
-                              onSubmitted: (value) {
-                                allottedBudget[index] = (value == "") ? allottedBudget[index] : double.parse(value);
-                                if (allottedBudget[index] != budgetCopy[index]) {
-                                  setState(() {
-                                    monthlyBudget = monthlyBudget - allottedBudget[index] + budgetCopy[index];
-                                  });
-                                }
-                              },
-                            )
-                          ) : Text(
-                            allottedBudget[index].toString(),
-                            style: TextStyle(
-                              fontSize: 20,
-                              fontFamily: 'Times',
-                              fontWeight: FontWeight.w500 
-                            ),
-                          ),
                         ),
                         title: Container(
-                          child: goalIsEditable ? SizedBox(
-                            width: w*0.55,
-                            child: TextField(
-                              decoration: InputDecoration(
-                                hintText: categories[index],
-                                hintStyle: TextStyle(
-                                  color: Colors.black,
+                          child: goalIsEditable
+                              ? SizedBox(
+                                  width: w * 0.55,
+                                  child: TextField(
+                                    decoration: InputDecoration(
+                                      hintText: category,
+                                      hintStyle: const TextStyle(color: Colors.black),
+                                      filled: true,
+                                      fillColor: Colors.white,
+                                      enabledBorder: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(10.0), // Rounded corners
+                                        borderSide: const BorderSide(color: Colors.white),
+                                      ),
+                                      focusedBorder: OutlineInputBorder(
+                                        borderSide: const BorderSide(
+                                            color: Color.fromARGB(0, 0, 0, 0)),
+                                      ),
+                                      border: const OutlineInputBorder(),
+                                    ),
+                                    onSubmitted: (value) {
+                                      setState(() {
+                                        categories[index] = value.isEmpty
+                                            ? categories[index]
+                                            : value;
+                                      });
+                                    },
+                                  ),
+                                )
+                              : Text(
+                                  category,
+                                  style: const TextStyle(
+                                    fontSize: 20,
+                                    fontFamily: 'Arial',
+                                    fontWeight: FontWeight.w500,
+                                  ),
                                 ),
-                                filled: true,
-                                fillColor: Colors.white,
-                                enabledBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(10.0), // Adds rounded corners
-                                  borderSide: BorderSide(color: Colors.white),
-                                ),
-                                focusedBorder: OutlineInputBorder(
-                                  borderSide: BorderSide(color: const Color.fromARGB(0, 0, 0, 0)),
-                                ),
-                                border: OutlineInputBorder(),
-                              ),
-                              onSubmitted: (value) {
-                                setState(() {
-                                  categories[index] = (value == "") ? categories[index] : value;
-                                });
-                              },
-                            )
-                          ) : Text(
-                            categories[index],
-                            style: TextStyle(
-                              fontSize: 20,
-                              fontFamily: 'Arial',
-                              fontWeight: FontWeight.w500 
-                            ),
-                          ),
                         ),
                       );
-                    }),
-                )
-         
+                    }).toList(),
+                  ),
+                ),
+
               ],
             ),
 

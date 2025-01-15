@@ -142,6 +142,7 @@ class AddRecordState extends State<AddRecord> {
     final double w = MediaQuery.of(context).size.width;
     return Scaffold(
       body: SingleChildScrollView(
+        padding: EdgeInsets.symmetric(vertical: 0, horizontal: 20),
         child: Container (
           width: w,
           margin: EdgeInsets.symmetric(vertical: 20, horizontal: 0),

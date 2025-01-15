@@ -32,7 +32,7 @@ class DashboardState extends State<Dashboard> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
-        padding: EdgeInsets.fromLTRB(20, 60, 20, 0),
+        padding: EdgeInsets.fromLTRB(0, 60, 0, 0),
         child: pages[currIndex]
       ),
       

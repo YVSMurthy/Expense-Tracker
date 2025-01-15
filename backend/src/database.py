@@ -190,14 +190,27 @@ class Database:
             
             initialDate = datetime(year, month, 1).date()
 
-            query = "select trans_id, title, type, trans_date, amount from transactions where user_id = %s and trans_date >= %s order by trans_date desc, trans_time desc"
+            query = "select trans_id, title, type, trans_date, amount, trans_time from transactions where user_id = %s and trans_date >= %s order by trans_date desc, trans_time desc"
             self.cursor.execute(query, (userId, initialDate))
 
-            transactions = self.cursor.fetchall()
+            transactionsTuple = self.cursor.fetchall()
+
+            transactions = []
+            for transaction in transactionsTuple:
+                transaction = list(transaction)  # Convert tuple to list
+                for index, value in enumerate(transaction):
+                    if isinstance(value, timedelta):
+                        # Convert timedelta to hours:minutes:seconds format
+                        total_seconds = value.total_seconds()
+                        hours = int(total_seconds // 3600)
+                        minutes = int((total_seconds % 3600) // 60)
+                        seconds = int((total_seconds % 3600) % 60)
+                        transaction[index] = f"{hours:02}:{minutes:02}:{seconds:02}"
+                transactions.append(transaction)
 
             return {'status': 200, 'transactions': transactions}
         except Exception as e:
-            print(e)
+            print("\n\n\n\n\n\n\n", e)
             return {'status': 500, 'error': e}
     
     # updating the dues

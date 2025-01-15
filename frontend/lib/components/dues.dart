@@ -15,18 +15,10 @@ class Dues extends StatefulWidget {
 
 class DuesState extends State<Dues> {
   final storage = Storage();
-  List<String> people = [];
-  List<double> due = [];
+  Map<String, double> dues = {}; // Key: Name, Value: Due amount
   double totalDue = 0;
   bool loading = true;
   String backendUri = "", userId = "";
-
-  void getDueDetails(int index) {
-    Navigator.push(
-      context, 
-      MaterialPageRoute(builder: (context) => DueDetails(name: people[index])) 
-    );
-  }
 
   @override
   void initState() {
@@ -34,7 +26,14 @@ class DuesState extends State<Dues> {
     _loadDetails();
   }
 
-  void _loadDetails() async {
+  void getDueDetails(String name) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => DueDetails(name: name)),
+    );
+  }
+
+  Future<void> _loadDetails() async {
     final storedUserId = await storage.get('user_id');
 
     setState(() {
@@ -44,38 +43,34 @@ class DuesState extends State<Dues> {
 
     try {
       final uri = Uri.parse("$backendUri/transactions/getDues");
-      final response = await http.post(uri,
+      final response = await http.post(
+        uri,
         headers: {'Content-Type': 'application/json'},
-        body: json.encode({
-          'user_id': userId
-        })
+        body: json.encode({'user_id': userId}),
       );
 
       final data = await json.decode(response.body);
 
       if (response.statusCode == 200) {
         final dueData = data['dues'];
-        
         setState(() {
-          for (int i = 0; i < dueData.length; i++) {
-            if (double.parse(dueData[i][1]) != 0) {
-              people.add(dueData[i][0]);
-              double currDue = double.parse(dueData[i][1]);
-              due.add(currDue);
-              totalDue += currDue;
-
+          for (var dueEntry in dueData) {
+            final name = dueEntry[0];
+            final amount = double.parse(dueEntry[1]);
+            if (amount != 0) {
+              dues[name] = amount;
+              totalDue += amount;
             }
           }
         });
-
       } else {
         if (mounted) {
           showWarningDialog(context, data['title'], data['message']);
         }
       }
-    } catch(error) {
+    } catch (error) {
       if (mounted) {
-        showWarningDialog(context, "Some Error Occured", error.toString());
+        showWarningDialog(context, "Some Error Occurred", error.toString());
       }
     }
 
@@ -91,124 +86,69 @@ class DuesState extends State<Dues> {
 
     return Scaffold(
       body: SingleChildScrollView(
-        child: (!loading) ? Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            (totalDue != 0) ? Column(
-              children: [
-                Row(
-                  children: [
-                    SizedBox(width: 10,),
-                    Text(
-                      "Dues",
-                      style: TextStyle(
-                        fontSize: 30,
-                        fontWeight: FontWeight.bold
+        child: loading
+            ? SizedBox(
+                width: w,
+                height: h * 0.75,
+                child: const Center(child: CircularProgressIndicator()),
+              )
+            : Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (totalDue != 0) ...[
+                    Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 16.0),
+                      child: Text(
+                        "Dues",
+                        style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold),
                       ),
                     ),
-                  ],
-                ),
-
-                SizedBox(height: 20,),
-
-                Container(
-                  width: w,
-                  padding: EdgeInsets.symmetric(vertical: 10, horizontal: 20),
-                  decoration: BoxDecoration(
-                    color: Colors.grey.shade300
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        "Name",
-                        style: TextStyle(
-                          fontSize: 20
-                        ),
+                    SizedBox(height: 20),
+                    Container(
+                      width: w,
+                      padding: EdgeInsets.symmetric(vertical: 15, horizontal: 20),
+                      decoration: BoxDecoration(color: const Color.fromARGB(255, 231, 231, 231)),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text("Name", style: TextStyle(fontSize: 20)),
+                          Text("Amount", style: TextStyle(fontSize: 20)),
+                        ],
                       ),
-                      Text(
-                        "Amount",
-                        style: TextStyle(
-                          fontSize: 20
-                        ),
-                      )
-                    ],
-                  )
-                ),
-
-                Container(
-                  height: people.length*h*0.09 + 10,
-                  constraints: BoxConstraints(maxHeight: h*0.65),
-                  decoration: BoxDecoration(
-                    color: const Color.fromARGB(255, 241, 241, 241)
-                  ),
-                  child: ListView.builder(
-                    itemCount: people.length,
-                    itemBuilder: (BuildContext context, int index) {
-                      return Container(
-                        padding: const EdgeInsets.fromLTRB(20, 0, 35, 10),
-                        child: Column (
-                          children: [
-                            Container(
-                              decoration: BoxDecoration(
-                                color: const Color.fromARGB(255, 241, 241, 241)
-                              ),
-                              child: GestureDetector(
-                                onTap: () {
-                                  getDueDetails(index);
-                                },
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Expanded(
-                                      child: Text(
-                                        people[index],
-                                        style: const TextStyle(
-                                          fontSize: 20,
-                                        ),
-                                      ),
-                                    ),
-                                    Text(
-                                      due[index].toString(),
-                                      style: const TextStyle(
-                                        fontSize: 20,
-                                        color: Color.fromARGB(255, 230, 53, 40),
-                                      ),
-                                    ),
-                                  ],
+                    ),
+                    SizedBox(height: 10,),
+                    ...dues.entries.map((entry) {
+                      return GestureDetector(
+                        onTap: () => getDueDetails(entry.key),
+                        child: Container(
+                          padding: EdgeInsets.fromLTRB(20, 15, 35, 10),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(entry.key, style: TextStyle(fontSize: 20)),
+                              Text(
+                                entry.value.toString(),
+                                style: TextStyle(
+                                  fontSize: 20,
+                                  color: Color.fromARGB(255, 230, 53, 40),
                                 ),
                               ),
-                            ),
-
-                            SizedBox(height: 25,)
-                          ],
-                        )
+                            ],
+                          ),
+                        ),
                       );
-                    },
-                  ),
-                ),
-              ]
-            ) : SizedBox(
-              width: w,
-              height: h*0.8,
-              child: Center(
-              child: Text(
-                "No Due",
-                style: TextStyle(
-                  fontSize: 36,
-                ),
+                    }),
+                  ] else
+                    SizedBox(
+                      width: w,
+                      height: h * 0.8,
+                      child: Center(
+                        child: Text("No Due", style: TextStyle(fontSize: 36)),
+                      ),
+                    ),
+                ],
               ),
-            ),
-            ),
-          ]
-        ) : SizedBox(
-          width: w,
-          height: h*0.75,
-          child: Center(
-            child: CircularProgressIndicator(),
-          ),
-        )
-      )
+      ),
     );
   }
 }

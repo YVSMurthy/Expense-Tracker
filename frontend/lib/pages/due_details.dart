@@ -64,6 +64,8 @@ class DueDetailsState extends State<DueDetails> {
           } else {
             due += double.parse(dueList[i][5]);
           }
+
+          expand.add(false);
         }
       });
     } else {
@@ -122,90 +124,113 @@ class DueDetailsState extends State<DueDetails> {
 
               SizedBox(height: 20,),
 
-              Container(
-                constraints: BoxConstraints(maxHeight: h*0.72),
-                child: ListView.builder(
-                  shrinkWrap: true,
-                  itemCount: dueList.length,
-                  itemBuilder: (BuildContext context, int index) {
-                    return Container(
-                      padding: EdgeInsets.symmetric(vertical: 10, horizontal: 20),
-                      margin: EdgeInsets.symmetric(vertical: 10, horizontal: 0),
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: Colors.black)
-                      ),
-                      child: Column(
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                dueList[index][1],
-                                style: TextStyle(
-                                  fontSize: 20
-                                ),
-                              ), 
-                              Text(
-                                dueList[index][5].toString(),
-                                style: TextStyle(
-                                  fontSize: 20,
-                                  color: (dueList[index][1] != "Due paid") ? Colors.red : Colors.green
-                                ),
-                              ),
-                            ]
-                          ),
-                          SizedBox(height: 2,),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Text(
-                                    "${dueList[index][3]}",
-                                    style: TextStyle(
-                                      fontSize: 15,
-                                      color: Colors.grey.shade800,
-                                    ),
-                                  ), 
-                                  SizedBox(width: 10,),
-                                  Text(
-                                    dueList[index][4],
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      color: Colors.grey.shade800,
-                                    ),
-                                  ), 
-                                ],
-                              ),
-                              SizedBox(height: 2,),
-                              Text(
-                                dueList[index][0],
-                                style: TextStyle(
-                                  fontSize: 15,
-                                  color: Colors.grey.shade800,
-                                ),
-                              ),
+              Text(
+                "Dues:",
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.w500
+                ),
+              ),
 
-                              SizedBox(height: 10,),
-                              
-                              Text(
-                                dueList[index][2],
-                                style: TextStyle(
-                                  fontSize: 15,
-                                  color: Colors.grey.shade800,
+              SizedBox(height: 10,),
+
+              Column(
+                children: [
+                  ...dueList.asMap().entries.map((entry) {
+                    int index = entry.key;
+                    List<dynamic> dues = entry.value;
+                    return GestureDetector(
+                      onTap: () {
+                        setState(() {
+                          expand[index] = !expand[index];
+                        });
+                      },
+                      child: Container(
+                        padding: EdgeInsets.symmetric(vertical: 10, horizontal: 5),
+                        margin: EdgeInsets.symmetric(vertical: 5, horizontal: 0),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: expand[index] ? Colors.black : Color.fromARGB(0, 0, 0, 0))
+                        ),
+                        child: Column(
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  dues[1],
+                                  style: TextStyle(
+                                    fontSize: 20
+                                  ),
                                 ),
-                              ),
-                            ],
-                          )
-                        ],
+                                Text(
+                                  dues[5].toString(),
+                                  style: TextStyle(
+                                    fontSize: 20,
+                                    color: (dues[1] != "Due paid") ? Colors.red : Colors.green
+                                  ),
+                                ), 
+                              ]
+                            ),
+                            SizedBox(height: 2,),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text(
+                                      "${dues[3]}",
+                                      style: TextStyle(
+                                        fontSize: 15,
+                                        color: Colors.grey.shade800,
+                                      ),
+                                    ), 
+                                    SizedBox(width: 10,),
+                                    Text(
+                                      dues[4],
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        color: Colors.grey.shade800,
+                                      ),
+                                    ), 
+                                  ],
+                                ),
+
+                                expand[index] ? Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    SizedBox(height: 2,),
+                                    Text(
+                                      dues[0],
+                                      style: TextStyle(
+                                        fontSize: 15,
+                                        color: Colors.grey.shade800,
+                                      ),
+                                    ),
+
+                                    SizedBox(height: 10,),
+                                    
+                                    Text(
+                                      dues[2],
+                                      style: TextStyle(
+                                        fontSize: 15,
+                                        color: Colors.grey.shade800,
+                                      ),
+                                    ),
+                                  ],
+                                ) : SizedBox()
+                              ],
+                            )
+                          ],
+                        ),
                       ),
                     );
-                  },
-                )
+                    
+                  }),
+                ],
               )
-            ],
+            ]
           ) : SizedBox(
             width: w,
             height: h*0.75,
