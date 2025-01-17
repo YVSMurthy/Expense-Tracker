@@ -212,6 +212,34 @@ class Database:
         except Exception as e:
             print("\n\n\n\n\n\n\n", e)
             return {'status': 500, 'error': e}
+        
+    # getting transaction details based on transaction id
+    def getTransactionDetails(self, transId):
+        try:
+            query = "select title, trans_desc, type, trans_date, amount, trans_time, split from transactions where trans_id = %s"
+            self.cursor.execute(query, (transId,))
+
+            transactionDetails = list(self.cursor.fetchone())
+
+            if (transactionDetails[6] == 1):
+                query = "select name from dues where trans_id = %s"
+                self.cursor.execute(query, (transId,))
+                name = self.cursor.fetchone()
+
+                transactionDetails.append(name[0])
+                
+            if isinstance(transactionDetails[5], timedelta):
+                # Convert timedelta to hours:minutes:seconds format
+                total_seconds = transactionDetails[5].total_seconds()
+                hours = int(total_seconds // 3600)
+                minutes = int((total_seconds % 3600) // 60)
+                seconds = int((total_seconds % 3600) % 60)
+                transactionDetails[5] = f"{hours:02}:{minutes:02}:{seconds:02}"
+
+            return {'status': 200, 'transaction_details': transactionDetails}
+        except Exception as e:
+            print(e)
+            return {'status': 500, 'error': e}
     
     # updating the dues
     def updateDue(self, userId, transDate, amount, friendName):

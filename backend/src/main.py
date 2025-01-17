@@ -253,7 +253,7 @@ def getTransactions():
         print(response['error'])
         return jsonify({'title': "Internal server error", 'message': 'Please try again.'}), 500
     
-@app.route('/transactions/getTransactionDetails')
+@app.route('/transactions/getTransactionDetails', methods=['POST'])
 def getTransactionDetails():
     data = request.get_json()
 

@@ -98,6 +98,8 @@ class TransactionHistoryState extends State<TransactionHistory> {
   void fetchTransactions() async {
     setState(() {
       loading = true;
+      transactionList.clear();
+      filteredTransactions.clear();
     });
 
     final uri = Uri.parse("$backendUri/transactions/getTransactions");
@@ -118,8 +120,7 @@ class TransactionHistoryState extends State<TransactionHistory> {
         }
       });
 
-      transactionList.entries.map((entry) {
-        Map<String, dynamic> monthlyTransaction = entry.value; 
+      transactionList.forEach((month, monthlyTransaction) {
         List<dynamic> transactions = monthlyTransaction['transactions'];
         for (int i = 0; i < transactions.length; i++) {
           String date = transactions[i][3].toString();
@@ -238,7 +239,7 @@ class TransactionHistoryState extends State<TransactionHistory> {
             SizedBox(height: 20,),
 
             SizedBox(
-              child: (!loading) ? Column(
+              child: (!loading) ? (filteredTransactions.isNotEmpty) ? Column(
                 children: [
                   ...filteredTransactions.entries.map((entry) {
                     String month = entry.key;
@@ -338,7 +339,19 @@ class TransactionHistoryState extends State<TransactionHistory> {
                     );
                   })
                 ],
-              )  : SizedBox(
+              ) : SizedBox(
+                width: w,
+                height: h*0.6,
+                child: Center(
+                  child: Text(
+                    "No Transactions",
+                    style: TextStyle(
+                      fontSize: 32,
+                      fontWeight: FontWeight.w500
+                    ),
+                  ),
+                ),
+              ) : SizedBox(
                 width: w,
                 height: h*0.6,
                 child: Center(
