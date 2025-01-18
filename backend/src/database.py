@@ -4,6 +4,7 @@ from dotenv import load_dotenv # type: ignore for warning
 import bcrypt # type: ignore for warning
 import uuid
 from datetime import datetime, timedelta
+from dateutil.relativedelta import relativedelta # type: ignore for warning
 
 # loading environment variables
 load_dotenv()
@@ -37,7 +38,7 @@ class Database:
             uniqueId = str(uuid.uuid4())
 
             query = "insert into users values(%s, %s, %s, %s, %s, %s)"
-            self.cursor.execute(query, (uniqueId, name, mobile, password, age, gender))
+            self.cursor.execute(query, (uniqueId, name.title(), mobile, password, age, gender))
             self.connection.commit()
 
             return {'status': 200, 'user_id': uniqueId}
@@ -109,7 +110,7 @@ class Database:
         try:
             # query to update the categories
             query = "delete from categories where user_id = %s and cat_name = %s"
-            self.cursor.execute(query, (userId, catName))
+            self.cursor.execute(query, (userId, catName.title()))
 
             query = "update monthly_budget set budget = %s where user_id = %s"
             self.cursor.execute(query, (monthlyBudget, userId))
@@ -139,7 +140,7 @@ class Database:
             if (len(updatedBudgets) != 0):
                 for (category, budget) in updatedBudgets.items():
                     query = "update categories set allotted_amount = %s where user_id = %s and cat_name = %s"
-                    self.cursor.execute(query, (budget, userId, category))
+                    self.cursor.execute(query, (budget, userId, category.title()))
                 
                 query = "update monthly_budget set budget = %s where user_id = %s"
                 self.cursor.execute(query, (monthlyBudget, userId))
@@ -148,7 +149,7 @@ class Database:
             if (len(updatedCategories) != 0):
                 for (oldCategory, newCategory) in updatedCategories.items():
                     query = "update categories set cat_name = %s where user_id = %s and cat_name = %s"
-                    self.cursor.execute(query, (newCategory, userId, oldCategory))
+                    self.cursor.execute(query, (newCategory.title(), userId, oldCategory.title()))
             
             self.connection.commit()
 
@@ -164,11 +165,11 @@ class Database:
             transTime = datetime.now().time()
 
             query = "insert into transactions values (%s, %s, %s, %s, %s, %s, %s, %s, %s)"
-            self.cursor.execute(query, (transId, userId, title, transDesc, transType, transDate, amount, transTime, split))
+            self.cursor.execute(query, (transId, userId, title.title(), transDesc, transType, transDate, amount, transTime, split))
 
             if (split):
                 query = "insert into dues values (%s, %s, %s, %s)"
-                self.cursor.execute(query, (transId, userId, friendName, amount))
+                self.cursor.execute(query, (transId, userId, friendName.title(), amount))
             
             self.connection.commit()
 
@@ -245,7 +246,7 @@ class Database:
     def updateDue(self, userId, transDate, amount, friendName):
         try:
             query = "select name, sum(amount) from dues where user_id=%s and name=%s group by name"
-            self.cursor.execute(query, (userId, friendName))
+            self.cursor.execute(query, (userId, friendName.title()))
 
             due = self.cursor.fetchone()
 
@@ -257,10 +258,10 @@ class Database:
 
             if (due[1] == amount):
                 query = "delete from dues where user_id=%s and name=%s"
-                self.cursor.execute(query, (userId, friendName))
+                self.cursor.execute(query, (userId, friendName.title()))
             else:
                 query = "insert into dues (trans_id, user_id, name, amount) values (%s, %s, %s, %s)"
-                self.cursor.execute(query, (transId, userId, friendName, -amount))
+                self.cursor.execute(query, (transId, userId, friendName.title(), -amount))
             
             self.connection.commit()
 
@@ -283,7 +284,7 @@ class Database:
     def getDueDetails(self, userId, friendName):
         try:
             query = "select trans_id, title, trans_desc, trans_date, trans_time, amount from transactions where trans_id in (select trans_id from dues where user_id = %s and name = %s) order by trans_date desc, trans_time desc"
-            self.cursor.execute(query, (userId, friendName))
+            self.cursor.execute(query, (userId, friendName.title()))
 
             dueDetailsTuple = self.cursor.fetchall()
 
@@ -302,4 +303,73 @@ class Database:
 
             return {'status': 200, 'due_details': dueDetails}
         except Exception as e:
+            return {'status': 500, 'error': e}
+        
+    # sending the analytics data for dashboard
+    def getAnalytics(self, userId):
+        try: 
+            # finding the monthly expense data
+            today = datetime.now()
+            initialDate = datetime(today.year, today.month, 1).date()
+
+            query = """
+                select 
+                    sum(case
+                            when type='exp' then amount
+                            when type='inc' then -amount
+                            else 0
+                        end) as net_expense,
+                    sum(case
+                            when type='exp' then amount
+                            else 0
+                        end) as expenses,
+                    sum(case
+                            when type='inc' then amount
+                            else 0
+                        end) as income,
+                from transactions
+                where user_id = %s and trans_date >= %s
+            """
+            self.cursor.execute(query, (userId, initialDate))
+
+            monthlyExpenseData = self.cursor.fetchone()
+
+            # getting category wise data
+            query = """
+                select
+                    title,
+                    sum(case
+                            when type='exp' then amount
+                            else 0
+                        end)
+                from transactions
+                where user_id = %s and trans_date >= %s
+                group by title
+                order by title
+            """
+            self.cursor.execute(query, (userId, initialDate))
+
+            categoryWiseData = self.cursor.fetchall()
+
+            # query for the expense history
+            fourMonthsAgo = (today - relativedelta(months=4)).replace(day=1).date()
+            query = """
+                select
+                    date_format(trans_date, '%b %Y') as month_name,
+                    sum(case
+                            when type='exp' then amount
+                            else 0
+                        end)
+                from transactions
+                where user_id = %s and trans_date >= %s
+                group by date_format(trans_date, '%Y-%m'), month_name
+                order by date_format(trans_date, '%Y-%m') desc
+            """
+            self.cursor.execute(query, (userId, fourMonthsAgo))
+
+            expenseHistory = self.cursor.fetchall()
+
+            return {'status': 200, 'monthly_expense_data': monthlyExpenseData, 'category_wise_data': categoryWiseData, 'expense_history': expenseHistory}
+        except Exception as e:
+            print(e)
             return {'status': 500, 'error': e}

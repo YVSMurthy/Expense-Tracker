@@ -303,6 +303,25 @@ def getDueDetails():
         return jsonify({'title': "Internal server error", 'message': 'Please try again.'}), 500
     
 
+# ----------------------------------------------------------------------------------------------------------------------
+# analytics routes ---------------------------------------------------------------------------------------------------
+
+@app.route('/analytics/get', methods=['POST'])
+def getAnalytics():
+    data = request.get_json()
+
+    userId = data.get('user_id')
+
+    db = Database()
+    response = db.getAnalytics(userId)
+    db.close()
+
+    if (response['status'] == 200):
+        return jsonify({'message': 'ok', 'monthly_expense_data': response['monthly_expense_data'], 'category_wise_data': response['category_wise_data'], 'expense_history': response['expense_history']}), 200
+    else:
+        print(response['error'])
+        return jsonify({'title': 'Internal Server Error', 'message': 'Please try again.'}), 500
+
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=3001, debug=False)
