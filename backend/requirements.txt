@@ -6,6 +6,8 @@ itsdangerous==2.2.0
 Jinja2==3.1.5
 MarkupSafe==3.0.2
 mysql-connector-python==9.1.0
+python-dateutil==2.9.0.post0
 python-dotenv==1.0.1
+six==1.17.0
 uuid==1.30
 Werkzeug==3.1.3

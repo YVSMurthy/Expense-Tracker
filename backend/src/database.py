@@ -316,17 +316,12 @@ class Database:
                 select 
                     sum(case
                             when type='exp' then amount
-                            when type='inc' then -amount
-                            else 0
-                        end) as net_expense,
-                    sum(case
-                            when type='exp' then amount
                             else 0
                         end) as expenses,
                     sum(case
                             when type='inc' then amount
                             else 0
-                        end) as income,
+                        end) as income
                 from transactions
                 where user_id = %s and trans_date >= %s
             """
