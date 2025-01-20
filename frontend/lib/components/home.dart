@@ -16,7 +16,7 @@ class HomeState extends State<Home> {
   final storage = Storage();
   String backendUri = "", userId = "";
   double netExpense = 0, expense = 0, income = 0; 
-  Map<String, List<dynamic>> categoryWiseData = {};
+  Map<String, double> categoryWiseData = {};
 
   Future<void> _loadDetails() async {
     try {
@@ -38,19 +38,21 @@ class HomeState extends State<Home> {
       final data = json.decode(response.body);
 
       if (response.statusCode == 200) {
+        print(data['category_wise_data']);
         setState(() {
+          categoryWiseData.clear();
           expense = double.parse(data['monthly_expense_data'][0]);
           income = double.parse(data['monthly_expense_data'][1]);
           netExpense = income - expense;
 
-          categoryWiseData = {
-            'Food': [40.0, Colors.amber],
-            'Stationary': [5.0, Colors.blue],
-            'Amazon': [15.0, Colors.green],
-            'Invest': [35.0, Colors.purple],
-            'Emergency': [5.0, Colors.red],
-          };
+          data['category_wise_data'].forEach((category) {
+            categoryWiseData.addEntries({
+              category[0] as String: double.parse(category[1].toString())
+            }.entries);
+          });
         });
+
+        print(categoryWiseData);
       } else {
         if (mounted) {
           showWarningDialog(context, "Internal Server Error", "Please try again.");
@@ -59,6 +61,7 @@ class HomeState extends State<Home> {
 
     } catch(error) {
       if (mounted) {
+        print(error);
         showWarningDialog(context, "An Error Occured", error.toString());
       }
     }
@@ -226,37 +229,34 @@ class HomeState extends State<Home> {
                     SizedBox(height: 30,),
 
                     Column(
+                      children: categoryWiseData.entries.map((entry) {
+                        print("got here");
+                        String catName = entry.key;
+                        double value = entry.value;
 
-                      children: [
-                        ...categoryWiseData.entries.map((entry) {
-                          String catName = entry.key;
-                          List<dynamic> data = entry.value;
-
-                          return Column(
-                            children: [
-                              Row(
-                                children: [
-                                  Container(
-                                    padding: EdgeInsets.all(10),
-                                    decoration: BoxDecoration(
-                                      color: data[1]
-                                    ),
+                        return Column(
+                          children: [
+                            Row(
+                              children: [
+                                Container(
+                                  padding: EdgeInsets.all(10),
+                                  decoration: BoxDecoration(
+                                    color: Colors.amber,
                                   ),
-                                  SizedBox(width: 20,),
-                                  Text(
-                                    "$catName (${data[0]}%)",
-                                    style: TextStyle(
-                                      fontSize: 18
-                                    ),
+                                ),
+                                SizedBox(width: 20),
+                                Text(
+                                  "$catName ($value%)",
+                                  style: TextStyle(
+                                    fontSize: 18,
                                   ),
-                                ],
-                              ),
-                              SizedBox(height: 5,)
-                            ],
-                          );
-                        })
-
-                      ],
+                                ),
+                              ],
+                            ),
+                            SizedBox(height: 5),
+                          ],
+                        );
+                      }).toList(),
                     ),
                   ],
                 ),
