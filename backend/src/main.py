@@ -317,7 +317,7 @@ def getAnalytics():
     db.close()
 
     if (response['status'] == 200):
-        return jsonify({'message': 'ok', 'monthly_expense_data': response['monthly_expense_data'], 'category_wise_data': response['category_wise_data'], 'expense_history': response['expense_history']}), 200
+        return jsonify({'message': 'ok', 'monthly_expense_data': response['monthly_expense_data'], 'category_wise_data': response['category_wise_data']}), 200
     else:
         print(response['error'])
         return jsonify({'title': 'Internal Server Error', 'message': 'Please try again.'}), 500

@@ -333,38 +333,23 @@ class Database:
             query = """
                 select
                     title,
-                    sum(case
-                            when type='exp' then amount
-                            else 0
-                        end)
+                    sum(amount),
+                    coalesce(
+                        (select allotted_amount 
+                        from categories 
+                        where cat_name = title AND user_id = %s), 
+                        0
+                    ) as allotted_amount
                 from transactions
-                where user_id = %s and trans_date >= %s
+                where user_id = %s and trans_date >= %s and type = 'exp'
                 group by title
                 order by title
             """
-            self.cursor.execute(query, (userId, initialDate))
+            self.cursor.execute(query, (userId, userId, initialDate))
 
             categoryWiseData = self.cursor.fetchall()
 
-            # query for the expense history
-            fourMonthsAgo = (today - relativedelta(months=4)).replace(day=1).date()
-            query = """
-                select
-                    date_format(trans_date, '%b %Y') as month_name,
-                    sum(case
-                            when type='exp' then amount
-                            else 0
-                        end)
-                from transactions
-                where user_id = %s and trans_date >= %s
-                group by date_format(trans_date, '%Y-%m'), month_name
-                order by date_format(trans_date, '%Y-%m') desc
-            """
-            self.cursor.execute(query, (userId, fourMonthsAgo))
-
-            expenseHistory = self.cursor.fetchall()
-
-            return {'status': 200, 'monthly_expense_data': monthlyExpenseData, 'category_wise_data': categoryWiseData, 'expense_history': expenseHistory}
+            return {'status': 200, 'monthly_expense_data': monthlyExpenseData, 'category_wise_data': categoryWiseData}
         except Exception as e:
             print(e)
             return {'status': 500, 'error': e}

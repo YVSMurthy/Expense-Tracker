@@ -207,7 +207,7 @@ class SettingsState extends State<Settings> {
     }
   }
 
-  void updatedGoals() async {
+  Future<void> updatedGoals() async {
     // checking if the goals have been edited
     bool categoryIsUpdated = false;
     bool budgetIsUpdated = false;
@@ -246,7 +246,7 @@ class SettingsState extends State<Settings> {
       try {
         final updateGoalUri = Uri.parse("$backendUri/update/updateGoals");
         final response = await http.post(updateGoalUri,
-          headers: {'Content-Type': 'application.json'},
+          headers: {'Content-Type': 'application/json'},
           body: json.encode({
             'user_id': userId,
             'updated_budget': updatedBudgets,
@@ -262,6 +262,9 @@ class SettingsState extends State<Settings> {
             categoriesCopy = categories;
             budgetCopy = allottedBudget;
           });
+
+          await storage.set('categories', json.encode(categories));
+          await storage.set('allotted_budget', json.encode(allottedBudget));
         } else if (response.statusCode == 500) {
           if (mounted) {
             showWarningDialog(context, data['title'], data['message']);
@@ -269,7 +272,7 @@ class SettingsState extends State<Settings> {
         }
       } catch(error) {
         if (mounted) {
-          showWarningDialog(context, "Internal Server Error", "Please try again.");
+          showWarningDialog(context, "Internal Server Error", error.toString());
         }
       }
     }
