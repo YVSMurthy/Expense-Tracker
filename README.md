@@ -29,22 +29,22 @@ A personal finance app built with Flutter to help you track and manage your inco
 <div style="display: block;">
     <div style="display: flex; align-items: center; justify-content: space-evenly;">
         <div style="max-width: 300px;">
-            <img src="home.png" alt="Home Page" style="width: 100%; height: auto;">
+            <img src="home.png" alt="Home Page" style="width: 500px; height: 1200px;">
         </div>
         <div style="max-width: 300px;">
-            <img src="transaction_history.png" alt="Transaction History" style="width: 100%; height: auto;">
+            <img src="transaction_history.png" alt="Transaction History" style="width: 500px; height: 1200px;">
         </div>
         <div style="max-width: 300px;">
-            <img src="add_record.png" alt="Add Record" style="width: 100%; height: auto;">
+            <img src="add_record.png" alt="Add Record" style="width: 500px; height: 1200px;">
         </div>
     </div>
     <div style="height: 50px"></div>
     <div style="display: flex; align-items: center; justify-content: space-evenly;">
         <div style="max-width: 300px;">
-            <img src="dues.png" alt="Due Page" style="width: 100%; height: auto;">
+            <img src="dues.png" alt="Due Page" style="width: 500px; height: 1200px;">
         </div>
         <div style="max-width: 300px;">
-            <img src="settings.png" alt="Settings Page" style="width: 100%; height: auto;">
+            <img src="settings.png" alt="Settings Page" style="width: 500px; height: 1200px;">
         </div>
     </div>
 </div>
