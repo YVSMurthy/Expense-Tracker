@@ -60,12 +60,8 @@ A personal finance app built with Flutter to help you track and manage your inco
 - Chart Libraries
 
 ### Backend
-- Node.js
-- Express.js
-- MySQL
-- Sequelize ORM
-- JWT Authentication
-- Bcrypt
+- Flask
+- MySQL connector
 
 ### Development Tools
 - Git
