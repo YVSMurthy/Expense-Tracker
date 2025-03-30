@@ -29,22 +29,22 @@ A personal finance app built with Flutter to help you track and manage your inco
 <div style="display: block;">
     <div style="display: flex; align-items: center; justify-content: space-evenly;">
         <div style="max-width: 300px;">
-            <img src="home.png" alt="Home Page" style="width: 500px; height: 1200px;">
+            <img src="https://github.com/user-attachments/assets/558fc8d6-ad9e-4af8-b7cf-147e74e8a1b8" alt="Home Page" style="width: 500px; height: auto;">
         </div>
         <div style="max-width: 300px;">
-            <img src="transaction_history.png" alt="Transaction History" style="width: 500px; height: 1200px;">
+            <img src="https://github.com/user-attachments/assets/2a20e2b2-0582-438a-8502-79b267aac509" alt="Transaction History" style="width: 500px; height: auto;">
         </div>
         <div style="max-width: 300px;">
-            <img src="add_record.png" alt="Add Record" style="width: 500px; height: 1200px;">
+            <img src="https://github.com/user-attachments/assets/ab062200-8197-44a3-960d-7ffbd197e1c6" alt="Add Record" style="width: 500px; height: auto;">
         </div>
     </div>
     <div style="height: 50px"></div>
     <div style="display: flex; align-items: center; justify-content: space-evenly;">
         <div style="max-width: 300px;">
-            <img src="dues.png" alt="Due Page" style="width: 500px; height: 1200px;">
+            <img src="https://github.com/user-attachments/assets/e564ec05-8bd0-4c2b-835d-0c4b446c5e8f" alt="Due Page" style="width: 500px; height: auto;">
         </div>
         <div style="max-width: 300px;">
-            <img src="settings.png" alt="Settings Page" style="width: 500px; height: 1200px;">
+            <img src="https://github.com/user-attachments/assets/a2361c79-aa72-4d24-bddb-8675fb8ef61e" alt="Settings Page" style="width: 500px; height: auto;">
         </div>
     </div>
 </div>
