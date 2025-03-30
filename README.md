@@ -49,6 +49,28 @@ A personal finance app built with Flutter to help you track and manage your inco
     </div>
 </div>
 
+## Technologies Used
+
+### Frontend
+- Flutter
+- Dart
+- Provider (State Management)
+- Flutter Secure Storage
+- AES Encryption
+- Chart Libraries
+
+### Backend
+- Node.js
+- Express.js
+- MySQL
+- Sequelize ORM
+- JWT Authentication
+- Bcrypt
+
+### Development Tools
+- Git
+- VS Code/Android Studio
+
 ## Backend
 
 The backend is built using **Node.js** with **Express.js** to handle user authentication, database interactions, and transactional queries. It uses **MySQL** for storing user data, transactions, and related information.
@@ -91,3 +113,67 @@ To protect sensitive user data on the frontend:
 
 ### Backend Security  
 - **Encrypted Database**: Passwords are hashed using **bcrypt** and stored in the **MySQL** database. This ensures that even if the database is breached, passwords remain secure.
+
+## 🔧 Installation & Setup
+
+### Clone the Repository
+```bash
+git clone https://github.com/YVSMurthy/Expense-Tracker.git
+cd Expense-Tracker
+```
+
+### Backend Setup
+```bash
+# Navigate to server directory
+cd backend
+
+# Create a Python virtual environment (optional but recommended)
+python -m venv venv
+source venv/bin/activate
+
+# Install dependencies
+pip install -r requirements.txt
+```
+
+Create env file with
+``` bash
+USER=your_user
+PASSWORD=your_password
+```
+
+Setup mysql database
+``` bash
+# Log into MySQL
+mysql -u your_db_username -p
+
+# Create the database
+CREATE DATABASE expense_tracker;
+
+# Exit MySQL
+exit
+```
+
+Start the Flask server
+``` bash
+python3 src/main.py
+```
+
+### Frontend Setup
+```bash
+# Navigate to client directory
+cd frontend
+
+# Install dependencies
+flutter pub get
+```
+
+Create env file with
+``` bash
+ENCRYPTION_KEY=your_encryption_key
+IV=your_IV_key
+BACKEND_URI=your_backend_uri
+```
+Start the development server
+``` bash
+flutter run
+```
