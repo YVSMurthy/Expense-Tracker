@@ -62,6 +62,7 @@ A personal finance app built with Flutter to help you track and manage your inco
 ### Backend
 - Flask
 - MySQL connector
+- Bcrypt
 
 ### Development Tools
 - Git
@@ -69,7 +70,7 @@ A personal finance app built with Flutter to help you track and manage your inco
 
 ## Backend
 
-The backend is built using **Node.js** with **Express.js** to handle user authentication, database interactions, and transactional queries. It uses **MySQL** for storing user data, transactions, and related information.
+The backend is built using **Flask** to handle user authentication, database interactions, and transactional queries. It uses **MySQL** for storing user data, transactions, and related information.
 
 ### Key Features of the Backend:
 1. **Authentication**:
